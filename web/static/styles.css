@@ -47,4 +47,17 @@ a.meal-row:hover{background:#faf4e8}
 .filter-btn{background:none;border:1px solid #d8cfc3;color:var(--muted);padding:4px 12px;border-radius:100px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;font-weight:400}
 .filter-btn.active{background:var(--terra);border-color:var(--terra);color:#fff;font-weight:500}
 [hidden]{display:none!important}
-@media(max-width:520px){.grid{grid-template-columns:1fr}}
+@media(max-width:520px){
+  .hero{padding:28px 16px 24px}
+  .grid{grid-template-columns:1fr}
+  .wrap{padding:20px 12px 60px}
+  a.meal-row{flex-wrap:wrap;align-items:flex-start;padding:10px 14px;gap:4px}
+  .mname{flex:0 0 100%;margin-bottom:4px}
+  .teddy-btn,.ease{display:none}
+  .cook-btn{width:30px;height:30px;font-size:13px}
+  .cook-meta{font-size:11px;min-width:0}
+  .cook-undo{font-size:14px;padding:2px 4px}
+  .star{font-size:17px;padding:4px 3px}
+  .filter-bar{padding:10px 14px;gap:8px}
+  .filter-btn{padding:7px 16px;font-size:12px}
+}
