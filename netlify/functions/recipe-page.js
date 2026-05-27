@@ -28,6 +28,18 @@ function unescHtml(str) {
     .replace(/&amp;/g, '&');
 }
 
+function cleanPersonalLabels(html) {
+  // Remove time, servings, David/Anne, and Teddy meta spans
+  html = html.replace(/<span>(?:⏱|🍽|🍷|👦)[^<]*<\/span>/g, '');
+  // Remove empty meta div if nothing remains
+  html = html.replace(/<div class="meta">\s*<\/div>/g, '');
+  // Remove notes that are David/Anne-only callouts
+  html = html.replace(/<div class="note">(?:→ )?David[^<]*<\/div>/g, '');
+  // Remove David/Anne and Teddy Approved tag pills
+  html = html.replace(/<span class="tag">(?:David[^<]*|Teddy Approved)<\/span>/g, '');
+  return html;
+}
+
 function applyOverrides(html, override) {
   if (override.title) {
     html = html.replace(/<title>[^<]*<\/title>/, '<title>' + escHtml(override.title) + '</title>');
@@ -224,6 +236,7 @@ exports.handler = async function(event) {
   }
 
   let html = fs.readFileSync(file, 'utf8');
+  html = cleanPersonalLabels(html);
 
   // Fetch and apply any saved overrides
   let override = {};
