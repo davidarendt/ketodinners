@@ -241,10 +241,8 @@ function renderEase(recipeId) {
   wrap.dataset.recipeId = recipeId;
   for (var i = 1; i <= 3; i++) {
     var btn = document.createElement('button');
-    btn.className = 'ease-btn' + (i === ease ? ' lit' : '');
-    btn.textContent = EASE_LABELS[i];
+    btn.className = 'ease-btn ease-' + i + (i === ease ? ' lit' : '');
     btn.title = EASE_LABELS[i];
-    btn.dataset.short = ['E','M','H'][i-1];
     var val = i;
     btn.addEventListener('click', (function(v) {
       return function(e) {
