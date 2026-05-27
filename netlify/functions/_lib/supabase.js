@@ -56,7 +56,7 @@ async function fetchRecipeStates(recipeIds) {
   if (!quoted) return {};
   const rows = await supabaseRequest(
     "GET",
-    `/rest/v1/recipe_states?select=recipe_id,rating,completed,completed_at,updated_at&recipe_id=in.(${encodeURIComponent(
+    `/rest/v1/recipe_states?select=recipe_id,rating,completed,completed_at,teddy_approved,ease,updated_at&recipe_id=in.(${encodeURIComponent(
       quoted
     )})`
   );
@@ -66,6 +66,8 @@ async function fetchRecipeStates(recipeIds) {
       rating: row.rating,
       completed: Boolean(row.completed),
       completedAt: row.completed_at,
+      teddyApproved: row.teddy_approved ?? null,
+      ease: row.ease ?? null,
       updatedAt: row.updated_at,
     };
   }
@@ -103,7 +105,7 @@ async function fetchRecipeOverrides(recipeIds) {
   return overrides;
 }
 
-async function upsertRecipeState(recipeId, rating, completed) {
+async function upsertRecipeState(recipeId, { rating, completed, teddyApproved, ease } = {}) {
   const payload = { recipe_id: recipeId, updated_at: new Date().toISOString() };
   if (rating !== undefined) payload.rating = rating;
   if (completed !== undefined) {
@@ -111,12 +113,16 @@ async function upsertRecipeState(recipeId, rating, completed) {
     if (completed) payload.completed_at = new Date().toISOString();
     // When uncompleting, leave completed_at intact so "last cooked" date is preserved
   }
+  if (teddyApproved !== undefined) payload.teddy_approved = teddyApproved;
+  if (ease !== undefined) payload.ease = ease;
   const rows = await supabaseRequest("POST", "/rest/v1/recipe_states?on_conflict=recipe_id", payload);
   const row = (rows || [])[0] || payload;
   return {
     rating: row.rating ?? null,
     completed: Boolean(row.completed),
     completedAt: row.completed_at || null,
+    teddyApproved: row.teddy_approved ?? null,
+    ease: row.ease ?? null,
     updatedAt: row.updated_at || payload.updated_at,
   };
 }

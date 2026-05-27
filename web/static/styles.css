@@ -28,6 +28,14 @@ a.meal-row:hover{background:#faf4e8}
 .cooked-btn{background:none;border:1.5px solid #d8cfc3;color:transparent;cursor:pointer;width:20px;height:20px;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0;transition:all .2s;line-height:1;font-family:inherit;flex-shrink:0}
 .cooked-btn.done{background:var(--olive);border-color:var(--olive);color:#fff}
 .cooked-btn:hover{border-color:var(--olive)}
+.teddy-btn{background:none;border:1.5px solid #d8cfc3;color:#ccc;cursor:pointer;width:20px;height:20px;border-radius:50%;font-size:9px;font-weight:600;display:flex;align-items:center;justify-content:center;padding:0;transition:all .2s;line-height:1;font-family:inherit;flex-shrink:0}
+.teddy-btn.approved{background:var(--terra);border-color:var(--terra);color:#fff}
+.teddy-btn:not(:disabled):hover{border-color:var(--terra)}
+.teddy-btn:disabled{opacity:.3;cursor:default}
+.ease{display:flex;gap:2px;flex-shrink:0}
+.ease-btn{background:none;border:1px solid #d8cfc3;color:#bbb;cursor:pointer;font-size:9px;font-weight:500;padding:2px 5px;border-radius:100px;line-height:1;font-family:inherit;transition:all .15s;white-space:nowrap}
+.ease-btn.lit{background:var(--navy);border-color:var(--navy);color:#fff}
+.ease-btn:hover{border-color:var(--navy);color:var(--navy)}
 .browse-wrap{background:#fff;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden}
 .browse-header{background:var(--navy);color:#fff;font-family:'Playfair Display',serif;font-size:16px;padding:14px 18px}
 .filter-bar{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #f0ece4}

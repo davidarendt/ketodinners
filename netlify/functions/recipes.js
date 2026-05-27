@@ -18,7 +18,7 @@ exports.handler = async function handler() {
       return {
         id: recipe.id,
         title: o.title || recipe.title,
-        week: recipe.week || null,
+        weeks: recipe.weeks || [],
         day: recipe.day || null,
         servings: o.servings || recipe.servings,
         image: o.image || recipe.image,

@@ -5,6 +5,12 @@ const WEEKS = {
   4: { bg: '#4A235A', label: 'Week 4 \u2014 Global Tour' },
   5: { bg: '#7B241C', label: 'Week 5 \u2014 Smoky & Rich' },
   6: { bg: '#0D6E54', label: 'Week 6 \u2014 Finish Strong' },
+  7: { bg: '#1F4E79', label: 'Week 7 \u2014 Italian & Global' },
+  8: { bg: '#843C0C', label: 'Week 8 \u2014 Mexican & Bold' },
+  9: { bg: '#375623', label: 'Week 9 \u2014 Smoky & Hearty' },
+  10: { bg: '#4A235A', label: 'Week 10 \u2014 Mediterranean & Rich' },
+  11: { bg: '#7B241C', label: 'Week 11 \u2014 Global & Bold' },
+  12: { bg: '#0D6E54', label: 'Week 12 \u2014 Finish Strong' },
 };
 
 const PROTEINS = ['all', 'beef', 'chicken', 'turkey', 'pork', 'lamb', 'eggs', 'duck', 'tofu'];
@@ -17,7 +23,7 @@ function recipeUrl(id) {
 }
 
 function getProtein(id) {
-  if (/frittata|shakshuka|baked-egg|bacon-egg|eggs-en-cocotte|egg-scramble|egg-fried/.test(id)) return 'eggs';
+  if (/frittata|shakshuka|baked-egg|bacon-egg|eggs-en-cocotte|egg-scramble|egg-fried|quiche|egg-bake/.test(id)) return 'eggs';
   if (/duck/.test(id)) return 'duck';
   if (/tofu/.test(id)) return 'tofu';
   if (/lamb/.test(id)) return 'lamb';
@@ -69,6 +75,7 @@ function updateAllCooked(recipeId) {
     btn.title = state.completed ? 'Mark as not cooked' : 'Mark as cooked';
     ago.textContent = state.completedAt ? weeksAgo(state.completedAt) : '';
   });
+  updateAllTeddy(recipeId);
 }
 
 function saveCompleted(recipeId, completed) {
@@ -147,6 +154,104 @@ function saveRating(recipeId, rating) {
   });
 }
 
+function renderTeddy(recipeId) {
+  var state = states[recipeId] || {};
+  var btn = document.createElement('button');
+  btn.className = 'teddy-btn' + (state.teddyApproved ? ' approved' : '');
+  btn.dataset.recipeId = recipeId;
+  btn.title = state.teddyApproved ? 'Teddy approved — click to clear' : 'Teddy approved?';
+  btn.textContent = 'T';
+  if (!state.completed) btn.disabled = true;
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    var newVal = !(states[recipeId] || {}).teddyApproved;
+    states[recipeId] = Object.assign({}, states[recipeId] || {}, { teddyApproved: newVal || null });
+    updateAllTeddy(recipeId);
+    saveTeddy(recipeId, newVal || null);
+  });
+  return btn;
+}
+
+function updateAllTeddy(recipeId) {
+  var state = states[recipeId] || {};
+  document.querySelectorAll('.teddy-btn[data-recipe-id="' + recipeId + '"]').forEach(function(btn) {
+    btn.classList.toggle('approved', !!state.teddyApproved);
+    btn.disabled = !state.completed;
+    btn.title = state.teddyApproved ? 'Teddy approved — click to clear' : 'Teddy approved?';
+  });
+}
+
+function saveTeddy(recipeId, val) {
+  var prev = (states[recipeId] || {}).teddyApproved;
+  fetch('/api/recipe-state', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recipeId: recipeId, teddyApproved: val }),
+  }).then(function(res) {
+    return res.json().then(function(data) {
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      states[recipeId] = Object.assign({}, states[recipeId] || {}, data.state);
+      updateAllTeddy(recipeId);
+    });
+  }).catch(function() {
+    states[recipeId] = Object.assign({}, states[recipeId] || {}, { teddyApproved: prev });
+    updateAllTeddy(recipeId);
+  });
+}
+
+var EASE_LABELS = ['', 'Easy', 'Med', 'Hard'];
+
+function renderEase(recipeId) {
+  var ease = (states[recipeId] || {}).ease || 0;
+  var wrap = document.createElement('span');
+  wrap.className = 'ease';
+  wrap.dataset.recipeId = recipeId;
+  for (var i = 1; i <= 3; i++) {
+    var btn = document.createElement('button');
+    btn.className = 'ease-btn' + (i === ease ? ' lit' : '');
+    btn.textContent = EASE_LABELS[i];
+    btn.title = EASE_LABELS[i];
+    var val = i;
+    btn.addEventListener('click', (function(v) {
+      return function(e) {
+        e.preventDefault();
+        var current = (states[recipeId] || {}).ease || 0;
+        saveEase(recipeId, current === v ? null : v);
+      };
+    })(val));
+    wrap.appendChild(btn);
+  }
+  return wrap;
+}
+
+function updateAllEase(recipeId, ease) {
+  document.querySelectorAll('.ease[data-recipe-id="' + recipeId + '"]').forEach(function(wrap) {
+    wrap.querySelectorAll('.ease-btn').forEach(function(btn, idx) {
+      btn.classList.toggle('lit', idx + 1 === ease);
+    });
+  });
+}
+
+function saveEase(recipeId, ease) {
+  var prev = (states[recipeId] || {}).ease || 0;
+  states[recipeId] = Object.assign({}, states[recipeId] || {}, { ease: ease });
+  updateAllEase(recipeId, ease);
+  fetch('/api/recipe-state', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recipeId: recipeId, ease: ease }),
+  }).then(function(res) {
+    return res.json().then(function(data) {
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      states[recipeId] = Object.assign({}, states[recipeId] || {}, data.state);
+      updateAllEase(recipeId, (data.state || {}).ease || 0);
+    });
+  }).catch(function() {
+    states[recipeId] = Object.assign({}, states[recipeId] || {}, { ease: prev });
+    updateAllEase(recipeId, prev);
+  });
+}
+
 function makeRow(recipe) {
   var a = document.createElement('a');
   a.className = 'meal-row';
@@ -157,6 +262,8 @@ function makeRow(recipe) {
   name.textContent = recipe.title;
   a.appendChild(name);
   a.appendChild(renderCooked(recipe.id));
+  a.appendChild(renderTeddy(recipe.id));
+  a.appendChild(renderEase(recipe.id));
   a.appendChild(renderStars(recipe.id));
   return a;
 }
@@ -166,9 +273,11 @@ function renderMealPlan() {
   el.innerHTML = '';
   var weekMap = {};
   recipes.forEach(function(r) {
-    var w = r.week || 0;
-    if (!weekMap[w]) weekMap[w] = [];
-    weekMap[w].push(r);
+    var ws = r.weeks && r.weeks.length ? r.weeks : (r.week ? [r.week] : [0]);
+    ws.forEach(function(w) {
+      if (!weekMap[w]) weekMap[w] = [];
+      weekMap[w].push(r);
+    });
   });
   var weeks = Object.keys(weekMap).map(Number).sort(function(a, b) { return a - b; });
   weeks.forEach(function(w) {

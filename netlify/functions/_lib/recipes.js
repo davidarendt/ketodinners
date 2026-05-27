@@ -301,7 +301,8 @@ function parseIndexHtmlOrder() {
     let m;
     while ((m = rowRe.exec(block)) !== null) {
       const id = m[1].replace(/\.html$/i, "");
-      orderMap[id] = { week, sortKey: sortKey++ };
+      if (!orderMap[id]) orderMap[id] = [];
+      orderMap[id].push({ week, sortKey: sortKey++ });
     }
   }
   return orderMap;
@@ -323,10 +324,10 @@ function loadRecipes() {
   const orderMap = parseIndexHtmlOrder();
   if (Object.keys(orderMap).length > 0) {
     for (const recipe of merged) {
-      const info = orderMap[recipe.id];
-      if (info) {
-        recipe.week = info.week;
-        recipe._sortKey = info.sortKey;
+      const entries = orderMap[recipe.id];
+      if (entries && entries.length > 0) {
+        recipe.weeks = entries.map((e) => e.week);
+        recipe._sortKey = entries[0].sortKey;
       } else {
         recipe._sortKey = 99999;
       }

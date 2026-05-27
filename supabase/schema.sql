@@ -3,6 +3,8 @@ create table if not exists public.recipe_states (
   rating int check (rating between 1 and 5),
   completed boolean not null default false,
   completed_at timestamptz,
+  teddy_approved boolean,
+  ease int check (ease between 1 and 3),
   updated_at timestamptz not null default now()
 );
 

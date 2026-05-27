@@ -18,8 +18,11 @@ exports.handler = async function handler(event) {
 
   const hasRating = body.rating !== undefined;
   const hasCompleted = body.completed !== undefined;
-  if (!hasRating && !hasCompleted) {
-    return jsonResponse(400, { error: "Send rating or completed." });
+  const hasTeddyApproved = body.teddyApproved !== undefined;
+  const hasEase = body.ease !== undefined;
+
+  if (!hasRating && !hasCompleted && !hasTeddyApproved && !hasEase) {
+    return jsonResponse(400, { error: "Send rating, completed, teddyApproved, or ease." });
   }
 
   let rating;
@@ -38,8 +41,24 @@ exports.handler = async function handler(event) {
     completed = body.completed;
   }
 
+  let teddyApproved;
+  if (hasTeddyApproved) {
+    if (body.teddyApproved !== null && typeof body.teddyApproved !== "boolean") {
+      return jsonResponse(400, { error: "teddyApproved must be a boolean or null." });
+    }
+    teddyApproved = body.teddyApproved;
+  }
+
+  let ease;
+  if (hasEase) {
+    if (body.ease !== null && (!Number.isInteger(body.ease) || body.ease < 1 || body.ease > 3)) {
+      return jsonResponse(400, { error: "ease must be 1, 2, 3, or null." });
+    }
+    ease = body.ease;
+  }
+
   try {
-    const state = await upsertRecipeState(recipeId, rating, completed);
+    const state = await upsertRecipeState(recipeId, { rating, completed, teddyApproved, ease });
     return jsonResponse(200, { recipeId, state });
   } catch (err) {
     return jsonResponse(503, { error: err.message || "Failed to save recipe state." });
