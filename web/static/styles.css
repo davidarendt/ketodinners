@@ -13,7 +13,7 @@ body{background:var(--cream);color:var(--text);font-family:'DM Sans',sans-serif;
 .wrap{max-width:960px;margin:0 auto;padding:40px 20px 60px}
 .loading-msg{color:var(--muted);font-size:14px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:28px}
-.week-card{border-radius:4px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.week-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1)}
 .week-header{color:#fff;font-family:'Playfair Display',serif;font-size:16px;padding:14px 18px}
 .meal-list{background:#fff}
 a.meal-row{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid #f0ece4;text-decoration:none;color:inherit;transition:background .15s}
@@ -43,28 +43,37 @@ a.meal-row:active{background:#f0ece4}
 .ease-btn{background:none;border:1px solid #d8cfc3;color:#bbb;cursor:pointer;font-size:9px;font-weight:500;padding:2px 5px;border-radius:100px;line-height:1;font-family:inherit;transition:all .15s;white-space:nowrap}
 .ease-btn.lit{background:var(--navy);border-color:var(--navy);color:#fff}
 .ease-btn:hover{border-color:var(--navy);color:var(--navy)}
-.browse-wrap{background:#fff;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden}
+.browse-wrap{background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.1);overflow:hidden}
 .browse-header{background:var(--navy);color:#fff;font-family:'Playfair Display',serif;font-size:16px;padding:14px 18px}
 .filter-bar{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #f0ece4}
 .filter-btn{background:none;border:1px solid #d8cfc3;color:var(--muted);padding:4px 12px;border-radius:100px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;font-weight:400}
 .filter-btn.active{background:var(--terra);border-color:var(--terra);color:#fff;font-weight:500}
 [hidden]{display:none!important}
 @media(max-width:520px){
-  .hero{padding:28px 16px 24px}
-  .grid{grid-template-columns:1fr;gap:16px}
-  .wrap{padding:20px 10px 60px}
-  .week-header{font-size:14px;padding:11px 14px}
-  a.meal-row{flex-wrap:wrap;align-items:flex-start;padding:11px 14px;gap:3px}
+  .hero{padding:24px 16px 20px}
+  .hero h1{font-size:clamp(22px,7vw,34px)}
+  .view-tabs{margin-top:16px}
+  .legend{font-size:10px;gap:4px;margin-top:10px;letter-spacing:.2px}
+  .legend span+span::before{margin-right:4px}
+  .grid{grid-template-columns:1fr;gap:10px}
+  .wrap{padding:16px 12px 80px}
+  .week-header{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;padding:10px 16px}
+  a.meal-row{flex-wrap:wrap;padding:13px 16px 12px;gap:0;align-items:center;border-bottom:1px solid #f0ece4}
   a.meal-row:hover{background:#fff}
-  .mname{flex:0 0 100%;font-size:14px;margin-bottom:5px}
-  .row-ratings{margin-left:auto;gap:6px}
-  .cook-btn{width:32px;height:32px;font-size:13px}
-  .cook-meta{font-size:11px;min-width:0}
-  .cook-undo{font-size:14px;padding:3px 5px}
-  .teddy-btn{width:26px;height:26px;font-size:10px}
-  .ease-btn{font-size:0;padding:4px 7px}
-  .ease-btn::after{content:attr(data-short);font-size:10px;font-weight:500}
-  .star{font-size:16px;padding:4px 2px}
-  .filter-bar{padding:10px 14px;gap:8px}
-  .filter-btn{padding:7px 16px;font-size:12px}
+  a.meal-row:active{background:#faf4e8}
+  .mname{flex:0 0 100%;font-size:15px;font-weight:500;margin-bottom:9px;line-height:1.3;min-width:0}
+  .cook-wrap{order:2;margin-left:auto;padding-left:10px;gap:5px}
+  .row-ratings{order:1;gap:5px}
+  .row-ratings .stars{order:1;gap:0}
+  .row-ratings .ease{order:2;gap:2px}
+  .row-ratings .teddy-btn{order:3}
+  .star{font-size:15px;padding:2px 1px}
+  .teddy-btn{width:26px;height:26px;font-size:11px;font-weight:700;border-radius:5px}
+  .ease-btn{font-size:0;width:26px;height:26px;padding:0;border-radius:5px;display:flex;align-items:center;justify-content:center}
+  .ease-btn::after{content:attr(data-short);font-size:10px;font-weight:700}
+  .cook-meta{display:none}
+  .cook-btn{width:30px;height:30px;font-size:13px}
+  .cook-undo{font-size:15px;padding:3px 4px}
+  .filter-bar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:10px 16px;gap:6px}
+  .filter-btn{flex-shrink:0;padding:6px 14px;font-size:11px}
 }
