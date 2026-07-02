@@ -195,19 +195,33 @@ function editPanel(slug, current) {
     var file = document.getElementById('ef-file').files[0];
     var imageUrl = document.getElementById('ef-image').value.trim() || null;
     if(file){
-      status.textContent = 'Uploading image\u2026';
+      status.textContent = 'Processing image\u2026';
       var reader = new FileReader();
       reader.onload = function(e){
-        var base64 = e.target.result.split(',')[1];
-        fetch('/api/recipe-upload',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({filename:file.name,contentType:file.type,data:base64})
-        }).then(function(r){ return r.json(); }).then(function(data){
-          if(data.error){ status.textContent=data.error; btn.disabled=false; return; }
-          status.textContent='Saving\u2026';
-          doSave(data.url);
-        }).catch(function(){ status.textContent='Upload failed.'; btn.disabled=false; });
+        var img = new Image();
+        img.onload = function(){
+          var maxDim = 2000;
+          var w = img.naturalWidth, h = img.naturalHeight;
+          var scale = Math.min(1, maxDim / Math.max(w, h));
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.round(w * scale);
+          canvas.height = Math.round(h * scale);
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          var base64 = dataUrl.split(',')[1];
+          status.textContent = 'Uploading image\u2026';
+          fetch('/api/recipe-upload',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({filename:file.name,contentType:'image/jpeg',data:base64})
+          }).then(function(r){ return r.json(); }).then(function(data){
+            if(data.error){ status.textContent=data.error; btn.disabled=false; return; }
+            status.textContent='Saving\u2026';
+            doSave(data.url);
+          }).catch(function(){ status.textContent='Upload failed.'; btn.disabled=false; });
+        };
+        img.onerror = function(){ status.textContent='Could not read image.'; btn.disabled=false; };
+        img.src = e.target.result;
       };
       reader.readAsDataURL(file);
     } else {
