@@ -291,19 +291,14 @@ function parseIndexHtmlOrder() {
   if (!fs.existsSync(indexFile)) return {};
   const html = fs.readFileSync(indexFile, "utf8");
   const orderMap = {};
-  let sortKey = 0;
-  const blocks = html.split('<div class="week-card">');
-  for (let i = 1; i < blocks.length; i += 1) {
-    const block = blocks[i];
-    const weekMatch = block.match(/Week\s+(\d+)/);
-    const week = weekMatch ? parseInt(weekMatch[1], 10) : i;
-    const rowRe = /href="([^"]+\.html)"\s+class="meal-row"/g;
-    let m;
-    while ((m = rowRe.exec(block)) !== null) {
-      const id = m[1].replace(/\.html$/i, "");
-      if (!orderMap[id]) orderMap[id] = [];
-      orderMap[id].push({ week, sortKey: sortKey++ });
-    }
+  const rowRe = /href="([^"]+\.html)"\s+class="meal-row"/g;
+  let m;
+  let position = 0;
+  while ((m = rowRe.exec(html)) !== null) {
+    const id = m[1].replace(/\.html$/i, "");
+    position += 1;
+    if (!orderMap[id]) orderMap[id] = [];
+    orderMap[id].push({ position, sortKey: position });
   }
   return orderMap;
 }
@@ -326,9 +321,10 @@ function loadRecipes() {
     for (const recipe of merged) {
       const entries = orderMap[recipe.id];
       if (entries && entries.length > 0) {
-        recipe.weeks = entries.map((e) => e.week);
+        recipe.positions = entries.map((e) => e.position);
         recipe._sortKey = entries[0].sortKey;
       } else {
+        recipe.positions = [];
         recipe._sortKey = 99999;
       }
     }

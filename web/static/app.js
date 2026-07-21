@@ -1,18 +1,3 @@
-const WEEKS = {
-  1: { bg: '#1F4E79', label: 'Week 1' },
-  2: { bg: '#375623', label: 'Week 2' },
-  3: { bg: '#843C0C', label: 'Week 3' },
-  4: { bg: '#4A235A', label: 'Week 4' },
-  5: { bg: '#7B241C', label: 'Week 5' },
-  6: { bg: '#0D6E54', label: 'Week 6' },
-  7: { bg: '#1F4E79', label: 'Week 7' },
-  8: { bg: '#843C0C', label: 'Week 8' },
-  9: { bg: '#375623', label: 'Week 9' },
-  10: { bg: '#4A235A', label: 'Week 10' },
-  11: { bg: '#7B241C', label: 'Week 11' },
-  12: { bg: '#0D6E54', label: 'Week 12' },
-};
-
 const PROTEINS = ['all', 'beef', 'chicken', 'turkey', 'pork', 'lamb', 'eggs', 'duck', 'tofu'];
 
 let recipes = [];
@@ -27,7 +12,7 @@ function getProtein(id) {
   if (/duck/.test(id)) return 'duck';
   if (/tofu/.test(id)) return 'tofu';
   if (/lamb/.test(id)) return 'lamb';
-  if (/kielbasa|andouille|pulled-pork|pork|chorizo/.test(id)) return 'pork';
+  if (/kielbasa|andouille|pulled-pork|pork|chorizo|sausage/.test(id)) return 'pork';
   if (/turkey/.test(id)) return 'turkey';
   if (/chicken/.test(id)) return 'chicken';
   if (/beef|steak|bulgogi|smash-burger|chuck/.test(id)) return 'beef';
@@ -188,11 +173,17 @@ function saveEase(recipeId, ease) {
   });
 }
 
-function makeRow(recipe) {
+function makeRow(recipe, position) {
   var a = document.createElement('a');
   a.className = 'meal-row';
   a.href = recipeUrl(recipe.id);
   a.dataset.protein = getProtein(recipe.id);
+  if (position) {
+    var num = document.createElement('span');
+    num.className = 'mnum';
+    num.textContent = position;
+    a.appendChild(num);
+  }
   var name = document.createElement('span');
   name.className = 'mname';
   name.textContent = recipe.title;
@@ -209,30 +200,18 @@ function makeRow(recipe) {
 function renderMealPlan() {
   var el = document.getElementById('viewMealplan');
   el.innerHTML = '';
-  var weekMap = {};
+  var seq = [];
   recipes.forEach(function(r) {
-    var ws = r.weeks && r.weeks.length ? r.weeks : (r.week ? [r.week] : [0]);
-    ws.forEach(function(w) {
-      if (!weekMap[w]) weekMap[w] = [];
-      weekMap[w].push(r);
-    });
+    (r.positions || []).forEach(function(p) { seq.push({ pos: p, recipe: r }); });
   });
-  var weeks = Object.keys(weekMap).map(Number).sort(function(a, b) { return a - b; });
-  weeks.forEach(function(w) {
-    var info = WEEKS[w] || { bg: '#1C2B3A', label: 'Week ' + w };
-    var card = document.createElement('div');
-    card.className = 'week-card';
-    var header = document.createElement('div');
-    header.className = 'week-header';
-    header.style.background = info.bg;
-    header.textContent = info.label;
-    var list = document.createElement('div');
-    list.className = 'meal-list';
-    weekMap[w].forEach(function(r) { list.appendChild(makeRow(r)); });
-    card.appendChild(header);
-    card.appendChild(list);
-    el.appendChild(card);
-  });
+  seq.sort(function(a, b) { return a.pos - b.pos; });
+  var card = document.createElement('div');
+  card.className = 'week-card meal-card-full';
+  var list = document.createElement('div');
+  list.className = 'meal-list';
+  seq.forEach(function(item) { list.appendChild(makeRow(item.recipe, item.pos)); });
+  card.appendChild(list);
+  el.appendChild(card);
 }
 
 function applyBrowseFilter(list, protein) {
@@ -297,7 +276,7 @@ function init() {
     var msg = document.getElementById('loadingMsg');
     if (msg) msg.remove();
     var countEl = document.getElementById('dinnerCount');
-    if (countEl) countEl.textContent = recipes.reduce(function(sum, r) { return sum + (r.weeks ? r.weeks.length : 0); }, 0);
+    if (countEl) countEl.textContent = recipes.reduce(function(sum, r) { return sum + (r.positions ? r.positions.length : 0); }, 0);
     renderMealPlan();
     renderBrowse();
     showView('mealplan');
