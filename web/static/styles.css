@@ -1,7 +1,7 @@
 :root{--cream:#FAF6EE;--terra:#C4622D;--olive:#4A5C2F;--navy:#1C2B3A;--gold:#D4A843;--text:#2C2416;--muted:#6B5E4E}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--cream);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh}
-.hero{background:var(--navy);padding:48px 20px 40px;text-align:center}
+.hero{background:var(--navy);padding:calc(48px + env(safe-area-inset-top)) 20px 40px;text-align:center}
 .hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,48px);color:#fff;margin-bottom:10px}
 .hero p{color:rgba(255,255,255,.65);font-size:14px;letter-spacing:.5px;margin-bottom:0}
 .view-tabs{display:flex;gap:8px;justify-content:center;margin-top:22px}
@@ -56,12 +56,12 @@ a.meal-row.done .mname{text-decoration:line-through;color:var(--muted);opacity:.
 .done-btn.done{background:var(--olive);border-color:var(--olive);color:#fff}
 .done-btn:not(.done):hover{border-color:var(--olive)}
 /* sticky cart bar */
-.cart-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;box-shadow:0 -2px 16px rgba(0,0,0,.25)}
+.cart-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -2px 16px rgba(0,0,0,.25)}
 .cart-info{font-size:14px;font-weight:500}
 .cart-actions{display:flex;gap:10px}
 .cart-clear{background:none;border:1px solid rgba(255,255,255,.4);color:#fff;padding:8px 16px;border-radius:100px;font-size:13px;cursor:pointer;font-family:inherit}
 .cart-build{background:var(--terra);border:none;color:#fff;padding:8px 18px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
-body.has-cart-bar{padding-bottom:64px}
+body.has-cart-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
 /* shopping list view */
 .shop-card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1)}
 .shop-head{background:var(--navy);color:#fff;padding:18px 20px}
@@ -106,7 +106,7 @@ body.has-cart-bar{padding-bottom:64px}
 .shop-empty p{margin-bottom:8px}
 [hidden]{display:none!important}
 @media(max-width:520px){
-  .hero{padding:24px 16px 20px}
+  .hero{padding:calc(24px + env(safe-area-inset-top)) 16px 20px}
   .hero h1{font-size:clamp(22px,7vw,34px)}
   .view-tabs{margin-top:16px}
   .legend{font-size:10px;gap:4px;margin-top:10px;letter-spacing:.2px}
