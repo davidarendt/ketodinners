@@ -381,14 +381,12 @@ function renderShopping(el, data) {
   var prog = document.createElement('span');
   prog.className = 'shop-progress';
   prog.id = 'shopProgress';
-  var wm = document.createElement('a');
-  wm.className = 'shop-walmart';
-  wm.href = 'https://www.walmart.com/';
-  wm.target = '_blank';
-  wm.rel = 'noopener';
-  wm.textContent = 'Open Walmart ↗';
+  var guide = document.createElement('button');
+  guide.className = 'shop-guided';
+  guide.textContent = '▶ Guided Shopping';
+  guide.addEventListener('click', startGuide);
   toolbar.appendChild(prog);
-  toolbar.appendChild(wm);
+  toolbar.appendChild(guide);
   card.appendChild(toolbar);
 
   var container = document.createElement('div');
@@ -416,7 +414,7 @@ function renderShopping(el, data) {
         var lk = document.createElement('a');
         lk.className = 'shop-item-link';
         lk.href = walmartUrl(text);
-        lk.target = '_blank';
+        lk.target = 'walmartShop';
         lk.rel = 'noopener';
         lk.title = 'Search on Walmart';
         lk.textContent = '🔍';
@@ -450,6 +448,86 @@ function renderShoppingPlaceholder() {
   var el = document.getElementById('viewShopping');
   el.innerHTML = '<div class="shop-empty"><p>No meals selected yet.</p>'
     + '<p>Go to <strong>Meal Plan</strong> or <strong>Browse All</strong>, tap the checkbox on each meal you want to shop for, then tap <strong>Build Shopping List</strong>.</p></div>';
+}
+
+// ---- guided shopping (one item at a time, single reused Walmart tab) ----
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+var guideItems = [];
+var guideIdx = 0;
+function buildGuideItems() {
+  var out = [];
+  function add(map) {
+    CATEGORY_ORDER.forEach(function(cat) {
+      (map[cat] || []).forEach(function(text) {
+        if (!haveItems.has(haveKey(text))) out.push(text);
+      });
+    });
+  }
+  if (shoppingData) { add(shoppingData.consolidated || {}); add(shoppingData.asNeeded || {}); }
+  return out;
+}
+function markHaveInList(text) {
+  document.querySelectorAll('#viewShopping .shop-item').forEach(function(row) {
+    var el = row.querySelector('.shop-item-text');
+    if (el && haveKey(el.textContent) === haveKey(text)) row.classList.add('have');
+  });
+  updateShopProgress();
+}
+function startGuide() {
+  guideItems = buildGuideItems();
+  guideIdx = 0;
+  if (!guideItems.length) { return; }
+  renderGuide();
+}
+function closeGuide() {
+  var ov = document.getElementById('guideOverlay');
+  if (ov) ov.remove();
+}
+function renderGuide() {
+  var ov = document.getElementById('guideOverlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'guideOverlay';
+    ov.className = 'guide-overlay';
+    document.body.appendChild(ov);
+  }
+  if (guideIdx >= guideItems.length) {
+    ov.innerHTML = '<div class="guide-card">'
+      + '<div class="guide-done">✓ All done</div>'
+      + '<p class="guide-done-sub">You\'ve worked through every item on the list.</p>'
+      + '<button class="guide-finish">Close</button></div>';
+    ov.querySelector('.guide-finish').onclick = closeGuide;
+    return;
+  }
+  var text = guideItems[guideIdx];
+  var q = cleanForSearch(text) || text;
+  var pct = Math.round(guideIdx / guideItems.length * 100);
+  var lastLabel = (guideIdx === guideItems.length - 1) ? 'Finish' : 'Next ›';
+  ov.innerHTML = '<div class="guide-card">'
+    + '<button class="guide-close" aria-label="Exit">✕</button>'
+    + '<div class="guide-progress"><div class="guide-bar" style="width:' + pct + '%"></div></div>'
+    + '<div class="guide-count">' + (guideIdx + 1) + ' of ' + guideItems.length + '</div>'
+    + '<div class="guide-label">Shopping for</div>'
+    + '<div class="guide-item">' + escapeHtml(text) + '</div>'
+    + '<a class="guide-search" href="' + walmartUrl(text) + '" target="walmartShop" rel="noopener">Search “' + escapeHtml(q) + '” on Walmart ↗</a>'
+    + '<div class="guide-nav">'
+    + '<button class="guide-prev"' + (guideIdx === 0 ? ' disabled' : '') + '>‹ Back</button>'
+    + '<button class="guide-have">I have this</button>'
+    + '<button class="guide-next">' + lastLabel + '</button>'
+    + '</div></div>';
+  ov.querySelector('.guide-close').onclick = closeGuide;
+  ov.querySelector('.guide-prev').onclick = function() { if (guideIdx > 0) { guideIdx -= 1; renderGuide(); } };
+  ov.querySelector('.guide-next').onclick = function() { guideIdx += 1; renderGuide(); };
+  ov.querySelector('.guide-have').onclick = function() {
+    var t = guideItems[guideIdx];
+    haveItems.add(haveKey(t));
+    persistHave();
+    markHaveInList(t);
+    guideItems.splice(guideIdx, 1);
+    renderGuide();
+  };
 }
 
 function renderMealPlan() {

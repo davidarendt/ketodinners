@@ -70,6 +70,27 @@ body.has-cart-bar{padding-bottom:64px}
 .shop-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px;border-bottom:1px solid #f0ece4}
 .shop-progress{font-size:13px;color:var(--muted);font-weight:500}
 .shop-walmart{font-size:13px;color:var(--terra);text-decoration:none;font-weight:600;white-space:nowrap}
+.shop-guided{background:var(--terra);border:none;color:#fff;padding:8px 16px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.shop-guided:hover{filter:brightness(1.05)}
+/* guided shopping stepper */
+.guide-overlay{position:fixed;inset:0;z-index:100;background:rgba(20,30,40,.55);display:flex;align-items:flex-end;justify-content:center}
+.guide-card{background:var(--navy);color:#fff;width:100%;max-width:560px;border-radius:16px 16px 0 0;padding:22px 22px calc(22px + env(safe-area-inset-bottom));position:relative;box-shadow:0 -6px 30px rgba(0,0,0,.35)}
+.guide-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.14);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:14px;cursor:pointer;line-height:1}
+.guide-progress{height:5px;background:rgba(255,255,255,.15);border-radius:3px;overflow:hidden;margin:4px 40px 14px 0}
+.guide-bar{height:100%;background:var(--gold);transition:width .2s}
+.guide-count{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.55)}
+.guide-label{font-size:12px;color:rgba(255,255,255,.6);margin-top:16px}
+.guide-item{font-family:'Playfair Display',serif;font-size:26px;line-height:1.2;margin:4px 0 18px}
+.guide-search{display:block;text-align:center;background:var(--terra);color:#fff;text-decoration:none;padding:15px;border-radius:10px;font-size:15px;font-weight:600;margin-bottom:14px}
+.guide-nav{display:flex;gap:10px;align-items:center}
+.guide-nav button{flex:1;padding:13px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;font-size:14px;cursor:pointer;font-family:inherit}
+.guide-have{color:rgba(255,255,255,.8)}
+.guide-next{background:#fff!important;color:var(--navy)!important;border:none!important;font-weight:600}
+.guide-nav button:disabled{opacity:.35;cursor:default}
+.guide-done{font-family:'Playfair Display',serif;font-size:24px;text-align:center;margin:14px 0 6px}
+.guide-done-sub{text-align:center;color:rgba(255,255,255,.6);font-size:14px;margin-bottom:18px}
+.guide-finish{display:block;width:100%;padding:14px;border-radius:10px;border:none;background:#fff;color:var(--navy);font-weight:600;cursor:pointer;font-family:inherit}
+@media(min-width:560px){.guide-overlay{align-items:center}.guide-card{border-radius:16px}}
 .shop-cat-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--olive);padding:14px 20px 6px}
 .shop-item{display:flex;align-items:center;gap:12px;padding:9px 20px;border-bottom:1px solid #f6f2ea}
 .shop-cat:last-child .shop-item:last-child{border-bottom:none}
