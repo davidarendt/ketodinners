@@ -9,6 +9,9 @@ __pycache__/
 shopping-list.md
 shopping-lists/
 
+# Node
+node_modules/
+
 # OS/editor files
 .DS_Store
 Thumbs.db

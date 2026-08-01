@@ -57,6 +57,20 @@
   status = 200
 
 [[redirects]]
+  from = "/api/weight-push"
+  to = "/.netlify/functions/weight-push"
+  status = 200
+
+[[redirects]]
+  from = "/api/weight-ingest"
+  to = "/.netlify/functions/weight-ingest"
+  status = 200
+
+# Reminder sender runs every 15 minutes (scheduled function).
+[functions."weight-reminders"]
+  schedule = "*/15 * * * *"
+
+[[redirects]]
   from = "/recipes/*"
   to = "/.netlify/functions/recipe-page"
   status = 200

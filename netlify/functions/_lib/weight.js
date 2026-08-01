@@ -122,8 +122,11 @@ function mapUser(row) {
     username: row.username,
     goalWeight: row.goal_weight != null ? Number(row.goal_weight) : 175,
     prefs: row.prefs || {},
+    apiKey: row.api_key || null,
   };
 }
+
+function newApiKey() { return "ak_" + crypto.randomBytes(24).toString("hex"); }
 
 async function findUserRow(username) {
   const rows = await supabaseRequest(
@@ -145,8 +148,24 @@ async function createUser(username, passcode) {
     username: normalizeUsername(username),
     pw_hash: hash,
     pw_salt: salt,
+    api_key: newApiKey(),
   });
   return mapUser((rows || [])[0]);
+}
+
+async function findUserByApiKey(key) {
+  const safe = String(key || "").replace(/[^a-zA-Z0-9_-]/g, "");
+  if (safe.length < 16) return null;
+  const rows = await supabaseRequest("GET",
+    `/rest/v1/weight_users?select=*&api_key=eq.${encodeURIComponent(safe)}&limit=1`);
+  return (rows || [])[0] || null;
+}
+
+async function regenerateApiKey(userId) {
+  const safe = String(userId).replace(/[^a-zA-Z0-9-]/g, "");
+  const rows = await supabaseRequest("PATCH",
+    `/rest/v1/weight_users?id=eq.${encodeURIComponent(safe)}`, { api_key: newApiKey() });
+  return mapUser((rows || [])[0] || null);
 }
 
 async function updateUser(id, patch) {
@@ -160,22 +179,39 @@ async function updateUser(id, patch) {
 }
 
 // ---------------------------------------------------------------- entry ops
+// Optional body-composition metrics carried alongside weight.
+const METRIC_COLS = {
+  bodyFatPct: "body_fat_pct",
+  muscleMass: "muscle_mass",
+  bodyWaterPct: "body_water_pct",
+  visceralFat: "visceral_fat",
+  bmi: "bmi",
+  waist: "waist",
+};
+
 function mapEntry(row) {
   if (!row) return null;
-  return {
+  const out = {
     id: row.id,
     date: row.entry_date,          // 'YYYY-MM-DD'
     weight: row.weight != null ? Number(row.weight) : null,
     source: row.source || "manual",
     timestamp: row.measured_at,
+    note: row.note || null,
   };
+  for (const key of Object.keys(METRIC_COLS)) {
+    const col = METRIC_COLS[key];
+    out[key] = row[col] != null ? Number(row[col]) : null;
+  }
+  return out;
 }
 
 const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
+const ENTRY_SELECT = "id,entry_date,weight,source,measured_at,note," + Object.values(METRIC_COLS).join(",");
 
 async function listEntries(userId, { limit } = {}) {
   const safe = String(userId).replace(/[^a-zA-Z0-9-]/g, "");
-  let q = `/rest/v1/weight_entries?select=id,entry_date,weight,source,measured_at&user_id=eq.${encodeURIComponent(safe)}&order=entry_date.desc`;
+  let q = `/rest/v1/weight_entries?select=${ENTRY_SELECT}&user_id=eq.${encodeURIComponent(safe)}&order=entry_date.desc`;
   if (limit) q += `&limit=${encodeURIComponent(limit)}`;
   const rows = await supabaseRequest("GET", q);
   return (rows || []).map(mapEntry);
@@ -186,13 +222,24 @@ function entryPayload(userId, input) {
   if (!date) throw new Error("Valid date (YYYY-MM-DD) is required.");
   const weight = Number(input.weight);
   if (!isFinite(weight) || weight <= 0) throw new Error("Valid weight is required.");
-  return {
+  const payload = {
     user_id: userId,
     entry_date: date,
     weight,
     measured_at: input.timestamp ? new Date(input.timestamp).toISOString() : new Date(`${date}T12:00:00Z`).toISOString(),
     source: input.source === "import" ? "import" : "manual",
   };
+  // Only include optional fields when provided, so a weight-only upsert doesn't
+  // wipe metrics logged earlier for the same day.
+  for (const key of Object.keys(METRIC_COLS)) {
+    const v = input[key];
+    if (v !== undefined && v !== null && v !== "") {
+      const n = Number(v);
+      if (isFinite(n)) payload[METRIC_COLS[key]] = n;
+    }
+  }
+  if (typeof input.note === "string") payload.note = input.note.trim() || null;
+  return payload;
 }
 
 // One entry per calendar day — latest write wins (upsert on user_id, entry_date).
@@ -222,6 +269,37 @@ async function deleteEntry(userId, id) {
   );
 }
 
+// ---------------------------------------------------------------- push subs
+async function upsertSubscription(userId, sub) {
+  if (!sub || !sub.endpoint || !sub.keys || !sub.keys.p256dh || !sub.keys.auth) {
+    throw new Error("Invalid push subscription.");
+  }
+  await supabaseRequest("POST", "/rest/v1/weight_push_subs?on_conflict=endpoint", {
+    user_id: userId, endpoint: sub.endpoint, p256dh: sub.keys.p256dh, auth: sub.keys.auth,
+  });
+}
+async function deleteSubscription(endpoint) {
+  await supabaseRequest("DELETE", `/rest/v1/weight_push_subs?endpoint=eq.${encodeURIComponent(endpoint)}`);
+}
+async function getSubsForUser(userId) {
+  const safe = String(userId).replace(/[^a-zA-Z0-9-]/g, "");
+  return (await supabaseRequest("GET",
+    `/rest/v1/weight_push_subs?select=id,endpoint,p256dh,auth&user_id=eq.${encodeURIComponent(safe)}`)) || [];
+}
+
+// ---------------------------------------------------------------- reminders
+async function getReminderUsers() {
+  const rows = await supabaseRequest("GET",
+    "/rest/v1/weight_users?select=id,prefs&prefs->>reminderEnabled=eq.true");
+  return (rows || []).map((r) => ({ id: r.id, prefs: r.prefs || {} }));
+}
+async function hasEntryOn(userId, dateStr) {
+  const safe = String(userId).replace(/[^a-zA-Z0-9-]/g, "");
+  const rows = await supabaseRequest("GET",
+    `/rest/v1/weight_entries?select=id&user_id=eq.${encodeURIComponent(safe)}&entry_date=eq.${encodeURIComponent(dateStr)}&limit=1`);
+  return (rows || []).length > 0;
+}
+
 module.exports = {
   jsonResponse,
   // auth
@@ -236,9 +314,17 @@ module.exports = {
   createUser,
   updateUser,
   mapUser,
+  findUserByApiKey,
+  regenerateApiKey,
   // entries
   listEntries,
   upsertEntry,
   upsertEntries,
   deleteEntry,
+  // push
+  upsertSubscription,
+  deleteSubscription,
+  getSubsForUser,
+  getReminderUsers,
+  hasEntryOn,
 };

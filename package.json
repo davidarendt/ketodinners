@@ -1,0 +1,9 @@
+{
+  "name": "ketodinners-functions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Netlify Functions dependencies (Almanac Web Push).",
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

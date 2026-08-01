@@ -1,5 +1,5 @@
 const {
-  jsonResponse, authFromEvent, getUserById, updateUser,
+  jsonResponse, authFromEvent, getUserById, updateUser, regenerateApiKey,
   listEntries, upsertEntry, upsertEntries, deleteEntry,
 } = require("./_lib/weight");
 
@@ -36,6 +36,10 @@ exports.handler = async function handler(event) {
     if (event.httpMethod === "PATCH") {
       let body;
       try { body = JSON.parse(event.body || "{}"); } catch { return jsonResponse(400, { error: "Invalid JSON." }); }
+      if (body.newApiKey === true) {
+        const user = await regenerateApiKey(userId);
+        return jsonResponse(200, { user });
+      }
       const user = await updateUser(userId, { goalWeight: body.goalWeight, prefs: body.prefs });
       return jsonResponse(200, { user });
     }

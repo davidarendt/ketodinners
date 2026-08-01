@@ -16,6 +16,16 @@
   var authScreen = document.getElementById('authScreen');
   var dashScreen = document.getElementById('dashScreen');
 
+  // Optional body-composition metrics (keys match the API).
+  var METRICS = [
+    { key: 'bodyFatPct', label: 'Body fat', unit: '%', step: '0.1' },
+    { key: 'waist', label: 'Waist', unit: 'in', step: '0.1' },
+    { key: 'muscleMass', label: 'Muscle mass', unit: 'lb', step: '0.1' },
+    { key: 'bodyWaterPct', label: 'Body water', unit: '%', step: '0.1' },
+    { key: 'visceralFat', label: 'Visceral fat', unit: '', step: '0.1' },
+    { key: 'bmi', label: 'BMI', unit: '', step: '0.1' },
+  ];
+
   // ----------------------------------------------------------- date helpers
   var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   function parseDate(s) { var p = s.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
@@ -209,12 +219,42 @@
            }).join('') + '</div></div><div class="chart-box" id="chartBox"></div></div>';
     }
 
+    // composition (only metrics that have data)
+    var compRows = METRICS.map(function (mt) {
+      var series = m.sorted.filter(function (e) { return e[mt.key] != null; });
+      if (!series.length) return null;
+      var latest = series[series.length - 1][mt.key];
+      var prev = series.length > 1 ? series[series.length - 2][mt.key] : null;
+      var delta = prev != null ? latest - prev : null;
+      return { label: mt.label, unit: mt.unit, latest: latest, delta: delta };
+    }).filter(Boolean);
+    if (compRows.length) {
+      h += '<div class="section"><div class="section-label">Composition</div><div class="table">' +
+           '<div class="thead comp-grid"><div>metric</div><div class="num">latest</div><div class="num">change</div></div>';
+      compRows.forEach(function (c) {
+        var u = c.unit ? ' ' + c.unit : '';
+        h += '<div class="trow comp-grid"><div class="lead">' + esc(c.label) + '</div>' +
+             '<div class="num muted">' + c.latest.toFixed(1) + u + '</div>' +
+             '<div class="num faint">' + (c.delta != null ? (c.delta > 0 ? '+' : '') + c.delta.toFixed(1) : '—') + '</div></div>';
+      });
+      h += '</div></div>';
+    }
+
     // log form
     h += '<div class="section"><div class="section-label">Log Entry</div>' +
-         '<form class="log-form" id="logForm">' +
+         '<form id="logForm">' +
+         '<div class="log-row">' +
          '<label class="log-field date"><span class="field-label">date</span><input id="logDate" class="field-input" type="date" value="' + todayISO() + '"></label>' +
          '<label class="log-field weight"><span class="field-label">weight (lbs)</span><input id="logWeight" class="field-input" type="number" step="0.1" inputmode="decimal" placeholder="—"></label>' +
-         '<button class="btn" type="submit">Save</button></form>' +
+         '<button class="btn" type="submit">Save</button></div>' +
+         '<button type="button" class="more-toggle" id="moreToggle">+ Body composition &amp; note</button>' +
+         '<div class="more-panel" id="morePanel" hidden><div class="metric-grid">' +
+         METRICS.map(function (mt) {
+           return '<label class="metric-field"><span class="field-label">' + mt.label + (mt.unit ? ' (' + mt.unit + ')' : '') + '</span>' +
+                  '<input class="field-input metric-input" data-metric="' + mt.key + '" type="number" step="' + mt.step + '" inputmode="decimal" placeholder="—"></label>';
+         }).join('') +
+         '</div><label class="metric-field note"><span class="field-label">note</span><input id="logNote" class="field-input" type="text" placeholder="optional"></label></div>' +
+         '</form>' +
          '<div class="import"><button class="import-toggle" id="importToggle" type="button">Import history</button>' +
          '<div class="import-panel" id="importPanel" hidden>' +
          '<p class="import-hint">Paste JSON or CSV (one “date, weight” per line), or choose a file.</p>' +
@@ -233,18 +273,22 @@
       h += '<div class="entries">';
       shown.forEach(function (e) {
         var avg = m.roll7Map[e.date];
-        h += '<div class="entry-row"><span class="entry-date">' + fmtShort(e.date) + '</span>' +
+        h += '<div class="entry-item"><div class="entry-row"><span class="entry-date">' + fmtShort(e.date) + '</span>' +
              '<span class="entry-raw">' + e.weight.toFixed(1) + '</span>' +
              '<span class="entry-avg">' + (avg != null ? avg.toFixed(1) : '—') + '</span>' +
-             '<button class="entry-del" data-id="' + esc(e.id || '') + '" data-date="' + esc(e.date) + '" title="Delete">✕</button></div>';
+             '<button class="entry-del" data-id="' + esc(e.id || '') + '" data-date="' + esc(e.date) + '" title="Delete">✕</button></div>' +
+             (e.note ? '<div class="entry-note">' + esc(e.note) + '</div>' : '') + '</div>';
       });
       h += '</div>';
       if (desc.length > 14) h += '<button class="entries-more" id="entriesMore">' + (showAll ? 'Show less' : 'Show all ' + desc.length) + '</button>';
     }
     h += '</div>';
 
+    // settings
+    h += settingsHtml();
+
     // footer
-    h += '<div class="footer">Numbers shown unfiltered.<button class="signout" id="signOut">Sign out' + (user ? ' · ' + esc(user.username) : '') + '</button></div>';
+    h += '<div class="footer">Numbers shown unfiltered.</div>';
 
     dashScreen.innerHTML = h;
     wireDashEvents();
@@ -401,9 +445,20 @@
       var date = document.getElementById('logDate').value;
       var wt = parseFloat(document.getElementById('logWeight').value);
       if (!date || isNaN(wt) || wt <= 0) { toast('Enter a valid date and weight.'); return; }
-      api('POST', '/weight-entries', { body: { date: date, weight: wt } })
+      var body = { date: date, weight: wt };
+      Array.prototype.forEach.call(document.querySelectorAll('.metric-input'), function (inp) {
+        var v = (inp.value || '').trim();
+        if (v !== '' && !isNaN(parseFloat(v))) body[inp.dataset.metric] = parseFloat(v);
+      });
+      var note = document.getElementById('logNote');
+      if (note && note.value.trim()) body.note = note.value.trim();
+      api('POST', '/weight-entries', { body: body })
         .then(function () { toast('Saved.'); return reload(); })
         .catch(function (e) { if (e.code !== 401) toast(e.message || 'Save failed.'); });
+    });
+    var moreToggle = document.getElementById('moreToggle');
+    if (moreToggle) moreToggle.addEventListener('click', function () {
+      var p = document.getElementById('morePanel'); if (p) p.hidden = !p.hidden;
     });
     Array.prototype.forEach.call(document.querySelectorAll('.entry-del'), function (b) {
       b.addEventListener('click', function () {
@@ -434,8 +489,142 @@
     var importRun = document.getElementById('importRun');
     if (importRun) importRun.addEventListener('click', doImport);
 
+    var remToggle = document.getElementById('remToggle');
+    if (remToggle) remToggle.addEventListener('click', function () {
+      if ((user.prefs || {}).reminderEnabled) disableReminders(); else enableReminders();
+    });
+    var remTime = document.getElementById('remTime');
+    if (remTime) remTime.addEventListener('change', function () {
+      if (/^\d{2}:\d{2}$/.test(remTime.value)) updateReminderTime(remTime.value);
+    });
+    var copyKey = document.getElementById('copyKey');
+    if (copyKey) copyKey.addEventListener('click', function () {
+      var k = (user && user.apiKey) || '';
+      if (navigator.clipboard) navigator.clipboard.writeText(k).then(function () { toast('Key copied.'); }, function () { toast('Copy failed.'); });
+      else toast('Key: ' + k);
+    });
+    var genKey = document.getElementById('genKey');
+    if (genKey) genKey.addEventListener('click', regenApiKey);
+    var regenKey = document.getElementById('regenKey');
+    if (regenKey) regenKey.addEventListener('click', function () {
+      if (confirm('Regenerate your sync key? The old key stops working immediately.')) regenApiKey();
+    });
+    var exportCsv = document.getElementById('exportCsv');
+    if (exportCsv) exportCsv.addEventListener('click', exportCSV);
+
     var signOut = document.getElementById('signOut');
     if (signOut) signOut.addEventListener('click', logout);
+  }
+
+  // ----------------------------------------------------------- settings + actions
+  function settingsHtml() {
+    var prefs = (user && user.prefs) || {};
+    var remEnabled = !!prefs.reminderEnabled;
+    var remTime = prefs.reminderTime || '07:00';
+    var apiKey = (user && user.apiKey) || '';
+    var origin = location.origin;
+    var pushOk = ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
+    var s = '<div class="section"><div class="section-label">Settings</div>';
+
+    s += '<div class="setting-card"><div class="setting-row"><span class="setting-name">Weigh-in reminder</span>' +
+         '<button class="toggle-btn' + (remEnabled ? ' on' : '') + '" id="remToggle" type="button">' + (remEnabled ? 'On' : 'Off') + '</button></div>' +
+         '<div class="setting-sub" id="remTimeRow"' + (remEnabled ? '' : ' hidden') + '><span class="field-label">remind me at</span>' +
+         '<input id="remTime" class="field-input time" type="time" value="' + remTime + '"></div>' +
+         '<p class="setting-hint">' + (pushOk ? 'Reminders need this app installed to your home screen (iPhone: Share → Add to Home Screen, then open from the icon).' : 'This browser can’t send notifications — install the app to your home screen and open it from there.') + '</p></div>';
+
+    s += '<div class="setting-card"><div class="setting-name">Apple Health sync</div>' +
+         '<p class="setting-hint">Send your latest Apple Health weight here with an iOS Shortcut.</p>';
+    if (apiKey) s += '<div class="key-row"><code class="key" id="apiKey">' + esc(apiKey) + '</code><button class="mini-btn" id="copyKey" type="button">Copy</button></div>';
+    else s += '<button class="mini-btn" id="genKey" type="button">Generate sync key</button>';
+    s += '<div class="key-row"><span class="field-label">endpoint</span><code class="key small">' + esc(origin) + '/api/weight-ingest</code></div>' +
+         '<details class="shortcut-steps"><summary>Shortcut setup</summary><ol>' +
+         '<li>Shortcuts app → new shortcut.</li>' +
+         '<li><b>Find Health Samples</b>: type <b>Body Mass</b>, sort by <b>Date</b> (newest first), limit <b>1</b>.</li>' +
+         '<li><b>Get Contents of URL</b>: the endpoint above, method <b>POST</b>, header <code>Content-Type: application/json</code>, JSON body with <code>key</code> = your key and <code>weight</code> = the Health sample.</li>' +
+         '<li>Run to test, then add a daily <b>Automation</b> to sync automatically.</li></ol>' +
+         (apiKey ? '<button class="mini-btn danger" id="regenKey" type="button">Regenerate key</button>' : '') + '</details></div>';
+
+    s += '<div class="setting-card actions-row"><button class="mini-btn" id="exportCsv" type="button">Export CSV</button>' +
+         '<button class="mini-btn" id="signOut" type="button">Sign out' + (user ? ' · ' + esc(user.username) : '') + '</button></div>';
+    return s + '</div>';
+  }
+
+  function urlBase64ToUint8Array(b64) {
+    var pad = '='.repeat((4 - b64.length % 4) % 4);
+    var base64 = (b64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+    var raw = atob(base64);
+    var arr = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    return arr;
+  }
+  function currentTz() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch (e) { return null; } }
+
+  function enableReminders() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+      toast('Install to your home screen first, then open from the icon.'); return;
+    }
+    Notification.requestPermission().then(function (perm) {
+      if (perm !== 'granted') { toast('Notifications not allowed.'); return; }
+      return navigator.serviceWorker.ready.then(function (reg) {
+        return api('GET', '/weight-push').then(function (cfg) {
+          if (!cfg.publicKey) { toast('Push not configured on server.'); throw { code: 0 }; }
+          return reg.pushManager.getSubscription().then(function (existing) {
+            return existing || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(cfg.publicKey) });
+          });
+        }).then(function (sub) {
+          var t = document.getElementById('remTime');
+          var time = (t && t.value) || '07:00';
+          return api('POST', '/weight-push', { body: { subscription: sub.toJSON(), reminderTime: time, tz: currentTz() } });
+        }).then(function (res) {
+          user.prefs = Object.assign({}, user.prefs, { reminderEnabled: true, reminderTime: res.reminder.time, tz: res.reminder.tz });
+          toast('Reminders on.'); render();
+        });
+      });
+    }).catch(function (e) { if (e && e.code !== 401) toast('Could not enable reminders.'); });
+  }
+
+  function disableReminders() {
+    var done = function () { user.prefs = Object.assign({}, user.prefs, { reminderEnabled: false }); render(); };
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(function (reg) {
+        return reg.pushManager.getSubscription().then(function (sub) {
+          var endpoint = sub ? sub.endpoint : null;
+          return (sub ? sub.unsubscribe() : Promise.resolve()).then(function () {
+            return api('DELETE', '/weight-push', { body: { endpoint: endpoint } });
+          });
+        });
+      }).then(done).catch(done);
+    } else { api('DELETE', '/weight-push', { body: {} }).then(done).catch(done); }
+    toast('Reminders off.');
+  }
+
+  function updateReminderTime(time) {
+    api('POST', '/weight-push', { body: { reminderTime: time, tz: currentTz() } }).then(function () {
+      user.prefs = Object.assign({}, user.prefs, { reminderTime: time });
+      toast('Reminder time updated.');
+    }).catch(function () {});
+  }
+
+  function exportCSV() {
+    var header = 'date,weight,body_fat_pct,waist,muscle_mass,body_water_pct,visceral_fat,bmi,note';
+    var asc = entries.slice().sort(function (a, b) { return a.date.localeCompare(b.date); });
+    var lines = [header];
+    asc.forEach(function (e) {
+      var cells = [e.date, e.weight, e.bodyFatPct, e.waist, e.muscleMass, e.bodyWaterPct, e.visceralFat, e.bmi,
+        e.note ? '"' + String(e.note).replace(/"/g, '""') + '"' : ''];
+      lines.push(cells.map(function (c) { return c == null ? '' : c; }).join(','));
+    });
+    var blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = 'almanac-weight.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function regenApiKey() {
+    api('PATCH', '/weight-entries', { body: { newApiKey: true } }).then(function (data) {
+      if (data.user) { user.apiKey = data.user.apiKey; render(); toast('New sync key generated.'); }
+    }).catch(function (e) { if (e.code !== 401) toast('Could not generate key.'); });
   }
 
   // ----------------------------------------------------------- toast
