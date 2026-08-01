@@ -1,0 +1,72 @@
+/* Weight tracker — neutral placeholder styling. Design guidance will replace this. */
+:root{
+  --bg:#0F1720;--surface:#182430;--surface-2:#21303d;--line:#2b3a48;
+  --text:#EAF0F5;--muted:#8aa0b2;--accent:#4ADE80;--danger:#f87171;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;min-height:100vh;
+}
+#app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+
+/* Lock screen */
+.lock{flex:1;display:flex;align-items:center;justify-content:center;padding:24px}
+.lock-inner{width:100%;max-width:300px;text-align:center;display:flex;flex-direction:column;gap:14px}
+.lock-logo{font-size:44px}
+.lock h1{font-size:26px;font-weight:600;letter-spacing:.5px}
+.lock-sub{color:var(--muted);font-size:14px;margin-top:-6px}
+.pin-input{
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  color:var(--text);font-size:24px;text-align:center;letter-spacing:8px;
+  padding:16px;width:100%;outline:none;transition:border-color .15s;
+}
+.pin-input:focus{border-color:var(--accent)}
+.pin-error{color:var(--danger);font-size:13px}
+
+/* Topbar */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:calc(18px + env(safe-area-inset-top)) 20px 14px;
+}
+.topbar h1{font-size:22px;font-weight:600}
+.icon-btn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:6px}
+
+/* Latest stat */
+.latest{padding:0 20px 8px}
+.latest-card{
+  background:linear-gradient(150deg,var(--surface),var(--surface-2));
+  border:1px solid var(--line);border-radius:18px;padding:22px;text-align:center;
+}
+.latest-value{font-size:44px;font-weight:700;line-height:1}
+.latest-unit{font-size:18px;color:var(--muted);font-weight:500;margin-left:4px}
+.latest-meta{color:var(--muted);font-size:13px;margin-top:8px}
+.latest-empty{color:var(--muted);font-size:15px;padding:8px 0}
+
+/* Add form */
+.add-form{display:flex;gap:10px;padding:16px 20px}
+.weight-input{
+  flex:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  color:var(--text);font-size:17px;padding:14px 16px;outline:none;transition:border-color .15s;
+}
+.weight-input:focus{border-color:var(--accent)}
+.btn-primary{
+  background:var(--accent);color:#08130b;border:none;border-radius:14px;
+  font-size:16px;font-weight:600;padding:14px 22px;cursor:pointer;transition:filter .15s;
+}
+.btn-primary:hover{filter:brightness(1.05)}
+.btn-primary:active{filter:brightness(.95)}
+
+/* Entry list */
+.entry-list{padding:8px 20px calc(40px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
+.entry{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+}
+.entry-w{font-size:17px;font-weight:600}
+.entry-date{color:var(--muted);font-size:13px}
+.entry-del{background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:4px 8px}
+.entry-del:hover{color:var(--danger)}
+.status-msg{text-align:center;color:var(--muted);font-size:13px;padding:0 20px 20px;min-height:18px}

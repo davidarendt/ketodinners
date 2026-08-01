@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no">
+<title>Weight Tracker</title>
+<link rel="manifest" href="/weight/manifest.json">
+<meta name="theme-color" content="#0F1720">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Weight">
+<link rel="apple-touch-icon" href="/weight/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="/weight/static/styles.css">
+</head>
+<body>
+<div id="app">
+  <!-- PIN unlock screen -->
+  <section id="lockScreen" class="lock" hidden>
+    <div class="lock-inner">
+      <div class="lock-logo">⚖</div>
+      <h1>Weight</h1>
+      <p class="lock-sub">Enter your PIN to continue</p>
+      <input id="pinInput" class="pin-input" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" aria-label="PIN">
+      <button id="pinBtn" class="btn-primary">Unlock</button>
+      <p id="pinError" class="pin-error" hidden>Incorrect PIN.</p>
+    </div>
+  </section>
+
+  <!-- Main app (placeholder skeleton — real layout to come) -->
+  <main id="mainScreen" hidden>
+    <header class="topbar">
+      <h1>Weight</h1>
+      <button id="lockBtn" class="icon-btn" title="Lock" aria-label="Lock">🔒</button>
+    </header>
+
+    <section class="latest" id="latest"></section>
+
+    <form id="addForm" class="add-form">
+      <input id="weightInput" class="weight-input" type="number" step="0.1" inputmode="decimal" placeholder="Weight (lb)" aria-label="Weight">
+      <button type="submit" class="btn-primary">Add</button>
+    </form>
+
+    <section id="entryList" class="entry-list"></section>
+    <p id="statusMsg" class="status-msg"></p>
+  </main>
+</div>
+
+<script src="/weight/static/app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/weight/sw.js', { scope: '/weight/' }).catch(function () {});
+  });
+}
+</script>
+</body>
+</html>

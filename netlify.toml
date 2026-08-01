@@ -45,6 +45,12 @@
   to = "/.netlify/functions/cook-log"
   status = 200
 
+# --- Weight tracker (side project at /weight/) ---
+[[redirects]]
+  from = "/api/weight-entries"
+  to = "/.netlify/functions/weight-entries"
+  status = 200
+
 [[redirects]]
   from = "/recipes/*"
   to = "/.netlify/functions/recipe-page"
