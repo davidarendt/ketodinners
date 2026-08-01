@@ -214,7 +214,14 @@
          '<form class="log-form" id="logForm">' +
          '<label class="log-field date"><span class="field-label">date</span><input id="logDate" class="field-input" type="date" value="' + todayISO() + '"></label>' +
          '<label class="log-field weight"><span class="field-label">weight (lbs)</span><input id="logWeight" class="field-input" type="number" step="0.1" inputmode="decimal" placeholder="—"></label>' +
-         '<button class="btn" type="submit">Save</button></form></div>';
+         '<button class="btn" type="submit">Save</button></form>' +
+         '<div class="import"><button class="import-toggle" id="importToggle" type="button">Import history</button>' +
+         '<div class="import-panel" id="importPanel" hidden>' +
+         '<p class="import-hint">Paste JSON or CSV (one “date, weight” per line), or choose a file.</p>' +
+         '<textarea id="importText" class="import-text" spellcheck="false" placeholder=\'{"entries":[{"date":"2026-01-04","weight":244}]}\'></textarea>' +
+         '<div class="import-actions"><input type="file" id="importFile" class="import-file" accept=".json,.csv,.txt"><button class="btn" id="importRun" type="button">Import</button></div>' +
+         '<p class="import-result" id="importResult"></p></div></div>' +
+         '</div>';
 
     // entries list
     h += '<div class="section"><div class="section-label">Recent Entries</div>';
@@ -321,6 +328,56 @@
 
   function reload() { return loadData().then(render); }
 
+  // ----------------------------------------------------------- import
+  function normDate(s) {
+    s = String(s || '').trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m) return m[3] + '-' + String(m[1]).padStart(2, '0') + '-' + String(m[2]).padStart(2, '0');
+    var d = new Date(s);
+    if (!isNaN(d.getTime())) return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    return null;
+  }
+  function parseImportText(text) {
+    text = (text || '').trim();
+    if (!text) return [];
+    var rows = [];
+    if (text[0] === '{' || text[0] === '[') {
+      var data = null; try { data = JSON.parse(text); } catch (e) {}
+      // NB: on an Array, `.entries` is Array.prototype.entries (a truthy function),
+      // so check Array.isArray explicitly rather than truthiness.
+      var arr = data && Array.isArray(data.entries) ? data.entries : (Array.isArray(data) ? data : []);
+      arr.forEach(function (el) {
+        if (Array.isArray(el)) rows.push({ date: el[0], weight: el[1] });
+        else if (el && typeof el === 'object') rows.push({ date: el.date, weight: el.weight });
+      });
+    } else {
+      text.split(/\r?\n/).forEach(function (line) {
+        line = line.trim(); if (!line) return;
+        var parts = line.split(/[,\t]/);
+        if (parts.length < 2) return;
+        if (/date/i.test(parts[0]) && /weight|lb|kg/i.test(parts[1])) return; // header
+        rows.push({ date: parts[0], weight: parts[1] });
+      });
+    }
+    var out = [];
+    rows.forEach(function (r) {
+      var date = normDate(r.date), weight = parseFloat(r.weight);
+      if (date && isFinite(weight) && weight > 0) out.push({ date: date, weight: weight, source: 'import' });
+    });
+    return out;
+  }
+  function doImport() {
+    var res = document.getElementById('importResult');
+    var rows = parseImportText(document.getElementById('importText').value);
+    if (!rows.length) { res.textContent = 'No valid rows found.'; return; }
+    res.textContent = 'Importing ' + rows.length + '…';
+    api('POST', '/weight-entries', { body: { entries: rows } }).then(function (data) {
+      toast('Imported ' + (data.added || 0) + ' entries.');
+      return reload();
+    }).catch(function (e) { if (e.code !== 401) res.textContent = e.message || 'Import failed.'; });
+  }
+
   function saveGoal(goal) { api('PATCH', '/weight-entries', { body: { goalWeight: goal } }).catch(function () {}); }
   function saveWindow(w) {
     var prefs = Object.assign({}, (user && user.prefs) || {}, { window: w });
@@ -363,6 +420,20 @@
       showAll = !showAll; try { localStorage.setItem(SHOWALL_KEY, showAll ? '1' : '0'); } catch (e) {}
       render();
     });
+    var importToggle = document.getElementById('importToggle');
+    if (importToggle) importToggle.addEventListener('click', function () {
+      var p = document.getElementById('importPanel'); if (p) p.hidden = !p.hidden;
+    });
+    var importFile = document.getElementById('importFile');
+    if (importFile) importFile.addEventListener('change', function () {
+      var f = importFile.files[0]; if (!f) return;
+      var r = new FileReader();
+      r.onload = function () { var ta = document.getElementById('importText'); if (ta) ta.value = r.result; };
+      r.readAsText(f);
+    });
+    var importRun = document.getElementById('importRun');
+    if (importRun) importRun.addEventListener('click', doImport);
+
     var signOut = document.getElementById('signOut');
     if (signOut) signOut.addEventListener('click', logout);
   }
