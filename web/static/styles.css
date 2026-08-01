@@ -138,3 +138,27 @@ body.has-cart-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   .have-box{width:24px;height:24px}
   .shop-head,.shop-toolbar,.shop-cat-label{padding-left:16px;padding-right:16px}
 }
+
+/* ---- Install prompt (Add to Home Screen) ---- */
+.install-backdrop{position:fixed;inset:0;background:rgba(28,43,58,.45);opacity:0;transition:opacity .25s;z-index:998}
+.install-backdrop.show{opacity:1}
+.install-sheet{position:fixed;left:0;right:0;bottom:0;z-index:999;background:var(--cream);border-radius:18px 18px 0 0;box-shadow:0 -6px 30px rgba(0,0,0,.25);padding:20px 20px calc(20px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;transform:translateY(110%);transition:transform .28s cubic-bezier(.2,.8,.25,1)}
+.install-sheet.show{transform:translateY(0)}
+.install-head{display:flex;align-items:center;gap:12px}
+.install-icon{width:44px;height:44px;border-radius:10px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.install-titles{flex:1;min-width:0}
+.install-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--navy);line-height:1.2}
+.install-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.install-x{background:none;border:none;font-size:26px;line-height:1;color:var(--muted);cursor:pointer;padding:0 4px;flex-shrink:0;font-family:inherit}
+.install-body{margin:14px 0 16px}
+.install-lead{font-size:14px;color:var(--text);line-height:1.5}
+.install-steps{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
+.install-steps li{display:flex;align-items:center;gap:11px;font-size:14px;color:var(--text);line-height:1.4}
+.install-step-ico,.install-step-num{flex-shrink:0;width:34px;height:34px;border-radius:9px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center}
+.install-step-num{font-family:'Playfair Display',serif;font-weight:700;font-size:15px}
+.install-actions{display:flex;flex-direction:column;gap:8px}
+.install-btn-primary{background:var(--navy);color:#fff;border:none;border-radius:100px;padding:14px;font-size:15px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .15s}
+.install-btn-primary:hover{background:#243a4f}
+.install-btn-primary:active{background:#16232f}
+.install-btn-ghost{background:none;border:none;color:var(--muted);font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:8px}
+.install-btn-ghost:hover{color:var(--text)}
