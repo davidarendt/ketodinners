@@ -11,14 +11,14 @@ A keto meal-plan site deployed to Netlify (site: `ketodinners`). Two coexisting 
 
 No `package.json` at the repo root. Netlify Functions rely on Node built-ins (`fs`, `path`, `fetch`) — no `npm install` step.
 
-### Second app: weight tracker (`/weight/`)
+### Second app: "The Almanac" weight tracker (`/weight/`)
 
-An unrelated personal side project piggybacks on the same Netlify site + Supabase project to avoid standing up new infra. It is deliberately self-contained so it can be lifted into its own project later:
+An unrelated personal side project piggybacks on the same Netlify site + Supabase project to avoid standing up new infra. It is deliberately self-contained so it can be lifted into its own project later. It's a multi-user PWA (share the link → each person gets their own account + data) that ports the `almanac-handoff` design/spec (a newspaper/lab-notebook weight dashboard: rolling averages, goal projection, trend table, SVG chart). The handoff targeted native iOS + HealthKit; we built the web PWA instead because the reference is already a web React/Recharts dashboard, it's shareable by link, and it runs on Windows. HealthKit sync is the one dropped feature (web can't).
 
-- **Front-end**: `web/weight/` — its own PWA (manifest + service worker scoped to `/weight/`, own icons). Installs as a separate home-screen app from the keto site.
-- **API**: `netlify/functions/weight-entries.js` + self-contained `netlify/functions/_lib/weight.js` (does not share `_lib/supabase.js`). Mapped at `/api/weight-entries`.
-- **Data**: `public.weight_entries` table (migration `..._weight_entries.sql`). Reuses `SUPABASE_URL`/`SUPABASE_ANON_KEY`.
-- **Auth**: PIN gate. The correct PIN is the `WEIGHT_PIN` Netlify env var; the client sends it in the `x-weight-pin` header and the function rejects mismatches. Set it with `netlify env:set WEIGHT_PIN <value>`.
+- **Front-end**: `web/weight/` — its own PWA (manifest + service worker scoped to `/weight/`, own icons). Vanilla JS (no build step); `app.js` is a port of `reference/dashboard.jsx`, chart drawn as inline SVG (Recharts is web-only and unavailable here). Installs as a separate home-screen app from the keto site.
+- **API**: `netlify/functions/weight-auth.js` (register/login) + `weight-entries.js` (per-user CRUD) + self-contained `_lib/weight.js` (does not share `_lib/supabase.js`). Mapped at `/api/weight-auth` and `/api/weight-entries`.
+- **Data**: `public.weight_users` + `public.weight_entries` (user_id-scoped, one row per calendar day via `on_conflict=user_id,entry_date` upsert). Reuses `SUPABASE_URL`/`SUPABASE_ANON_KEY`.
+- **Auth**: username + passcode. Passcodes hashed with Node's built-in `crypto` scrypt; login returns an HMAC-signed session token (payload.sig) that the client sends as `Authorization: Bearer …`. The signing key is the `WEIGHT_AUTH_SECRET` Netlify env var — set it with `netlify env:set WEIGHT_AUTH_SECRET <random>`. No new npm deps (built-in crypto only). RLS stays permissive-anon; the function enforces per-user scoping via the token.
 
 Note: both apps share one origin, so CacheStorage is shared. Each service worker's `activate` cleanup only deletes caches matching its own name prefix (`ketodinners` / `weighttracker`) so they don't wipe each other.
 

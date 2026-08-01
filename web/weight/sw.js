@@ -2,7 +2,7 @@
 // Network-first for same-origin GETs (deploys show up), cache fallback offline.
 // API + function calls are never cached. Cache name is namespaced so the
 // keto app's SW cleanup won't touch it (and vice-versa).
-const CACHE = 'weighttracker-v1';
+const CACHE = 'weighttracker-v2';
 const SHELL = [
   '/weight/',
   '/weight/static/app.js',

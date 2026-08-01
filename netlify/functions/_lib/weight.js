@@ -1,6 +1,9 @@
-// Self-contained data layer for the weight tracker. Kept separate from the
-// recipe helpers so the whole /weight feature can be extracted later.
-// Reuses the same SUPABASE_URL / SUPABASE_ANON_KEY env vars.
+// Self-contained data + auth layer for the Almanac weight tracker.
+// Kept separate from the recipe helpers so the whole /weight feature can be
+// extracted later. Reuses SUPABASE_URL / SUPABASE_ANON_KEY. Auth uses Node's
+// built-in crypto only (no dependencies): scrypt for passcodes, HMAC for tokens.
+
+const crypto = require("crypto");
 
 function jsonResponse(statusCode, payload) {
   return {
@@ -26,7 +29,9 @@ async function supabaseRequest(method, restPath, body) {
   };
   if (body) {
     headers["Content-Type"] = "application/json";
-    headers.Prefer = "return=representation";
+    headers.Prefer = restPath.includes("on_conflict=")
+      ? "resolution=merge-duplicates,return=representation"
+      : "return=representation";
   }
   const response = await fetch(`${url}${restPath}`, {
     method,
@@ -35,105 +40,205 @@ async function supabaseRequest(method, restPath, body) {
   });
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`Supabase request failed (${response.status}): ${text}`);
+    const err = new Error(`Supabase request failed (${response.status}): ${text}`);
+    err.status = response.status;
+    err.body = text;
+    throw err;
   }
   if (response.status === 204) return null;
   const text = await response.text();
   return text ? JSON.parse(text) : null;
 }
 
-// ---- PIN gate ----
-// Correct PIN lives in the WEIGHT_PIN env var (set via `netlify env:set`).
-// The client sends it in the `x-weight-pin` header on every request.
-function checkPin(event) {
-  const required = process.env.WEIGHT_PIN || "";
-  if (!required) return { ok: false, code: 500, error: "Server PIN not configured (set WEIGHT_PIN)." };
-  const headers = event.headers || {};
-  const provided = (headers["x-weight-pin"] || headers["X-Weight-Pin"] || "").toString();
-  if (provided.length !== required.length || provided !== required) {
-    return { ok: false, code: 401, error: "Invalid PIN." };
-  }
-  return { ok: true };
+// ---------------------------------------------------------------- auth utils
+function b64url(buf) {
+  return Buffer.from(buf).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function b64urlDecode(str) {
+  str = str.replace(/-/g, "+").replace(/_/g, "/");
+  while (str.length % 4) str += "=";
+  return Buffer.from(str, "base64");
 }
 
-// ---- mapping ----
-function mapRow(row) {
+function hashPasscode(passcode, saltHex) {
+  const salt = saltHex || crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(String(passcode), salt, 64).toString("hex");
+  return { salt, hash };
+}
+function verifyPasscode(passcode, saltHex, expectedHex) {
+  const { hash } = hashPasscode(passcode, saltHex);
+  const a = Buffer.from(hash, "hex");
+  const b = Buffer.from(expectedHex, "hex");
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+const TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
+
+function authSecret() {
+  const s = process.env.WEIGHT_AUTH_SECRET || "";
+  if (!s) throw new Error("WEIGHT_AUTH_SECRET not configured.");
+  return s;
+}
+function signToken(userId) {
+  const payload = b64url(JSON.stringify({ uid: userId, exp: Date.now() + TOKEN_TTL_MS }));
+  const sig = b64url(crypto.createHmac("sha256", authSecret()).update(payload).digest());
+  return `${payload}.${sig}`;
+}
+function verifyToken(token) {
+  if (!token || typeof token !== "string" || token.indexOf(".") < 0) return null;
+  const [payload, sig] = token.split(".");
+  const expected = b64url(crypto.createHmac("sha256", authSecret()).update(payload).digest());
+  const a = Buffer.from(sig || "");
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  let data;
+  try { data = JSON.parse(b64urlDecode(payload).toString("utf8")); } catch { return null; }
+  if (!data || !data.uid || !data.exp || Date.now() > data.exp) return null;
+  return { uid: data.uid };
+}
+
+// Reads the bearer token from the request and returns { uid } or null.
+function authFromEvent(event) {
+  const headers = event.headers || {};
+  let token = headers["x-weight-token"] || headers["X-Weight-Token"] || "";
+  const authz = headers["authorization"] || headers["Authorization"] || "";
+  if (!token && /^Bearer /i.test(authz)) token = authz.replace(/^Bearer /i, "").trim();
+  return verifyToken(token);
+}
+
+// ---------------------------------------------------------------- validation
+function normalizeUsername(u) {
+  return String(u || "").trim().toLowerCase();
+}
+function validUsername(u) {
+  return /^[a-z0-9][a-z0-9_.-]{2,29}$/.test(u); // 3–30 chars
+}
+
+// ---------------------------------------------------------------- user ops
+function mapUser(row) {
   if (!row) return null;
   return {
     id: row.id,
-    measuredAt: row.measured_at,
-    weight: row.weight,
-    unit: row.unit || "lb",
-    bodyFatPct: row.body_fat_pct,
-    muscleMass: row.muscle_mass,
-    bodyWaterPct: row.body_water_pct,
-    bmi: row.bmi,
-    boneMass: row.bone_mass,
-    visceralFat: row.visceral_fat,
-    bmr: row.bmr,
-    metabolicAge: row.metabolic_age,
-    note: row.note,
-    source: row.source || "manual",
-    metrics: row.metrics || null,
-    createdAt: row.created_at,
+    username: row.username,
+    goalWeight: row.goal_weight != null ? Number(row.goal_weight) : 175,
+    prefs: row.prefs || {},
   };
 }
 
-const NUM = (v) => (v === undefined || v === null || v === "" ? undefined : Number(v));
-
-function toPayload(input) {
-  const p = {};
-  if (input.measuredAt) p.measured_at = new Date(input.measuredAt).toISOString();
-  if (NUM(input.weight) !== undefined) p.weight = NUM(input.weight);
-  if (input.unit) p.unit = input.unit === "kg" ? "kg" : "lb";
-  if (NUM(input.bodyFatPct) !== undefined) p.body_fat_pct = NUM(input.bodyFatPct);
-  if (NUM(input.muscleMass) !== undefined) p.muscle_mass = NUM(input.muscleMass);
-  if (NUM(input.bodyWaterPct) !== undefined) p.body_water_pct = NUM(input.bodyWaterPct);
-  if (NUM(input.bmi) !== undefined) p.bmi = NUM(input.bmi);
-  if (NUM(input.boneMass) !== undefined) p.bone_mass = NUM(input.boneMass);
-  if (NUM(input.visceralFat) !== undefined) p.visceral_fat = NUM(input.visceralFat);
-  if (NUM(input.bmr) !== undefined) p.bmr = Math.round(NUM(input.bmr));
-  if (NUM(input.metabolicAge) !== undefined) p.metabolic_age = Math.round(NUM(input.metabolicAge));
-  if (typeof input.note === "string") p.note = input.note;
-  if (input.source) p.source = input.source;
-  if (input.metrics && typeof input.metrics === "object") p.metrics = input.metrics;
-  return p;
+async function findUserRow(username) {
+  const rows = await supabaseRequest(
+    "GET",
+    `/rest/v1/weight_users?select=*&username=eq.${encodeURIComponent(normalizeUsername(username))}&limit=1`
+  );
+  return (rows || [])[0] || null;
 }
 
-// ---- operations ----
-async function listEntries({ limit, since } = {}) {
-  let q = "/rest/v1/weight_entries?select=*&order=measured_at.desc";
-  if (since) q += `&measured_at=gte.${encodeURIComponent(new Date(since).toISOString())}`;
+async function getUserById(id) {
+  const safe = String(id).replace(/[^a-zA-Z0-9-]/g, "");
+  const rows = await supabaseRequest("GET", `/rest/v1/weight_users?select=*&id=eq.${encodeURIComponent(safe)}&limit=1`);
+  return mapUser((rows || [])[0] || null);
+}
+
+async function createUser(username, passcode) {
+  const { salt, hash } = hashPasscode(passcode);
+  const rows = await supabaseRequest("POST", "/rest/v1/weight_users", {
+    username: normalizeUsername(username),
+    pw_hash: hash,
+    pw_salt: salt,
+  });
+  return mapUser((rows || [])[0]);
+}
+
+async function updateUser(id, patch) {
+  const safe = String(id).replace(/[^a-zA-Z0-9-]/g, "");
+  const payload = {};
+  if (patch.goalWeight !== undefined && patch.goalWeight !== null) payload.goal_weight = Number(patch.goalWeight);
+  if (patch.prefs !== undefined) payload.prefs = patch.prefs;
+  if (!Object.keys(payload).length) return getUserById(id);
+  const rows = await supabaseRequest("PATCH", `/rest/v1/weight_users?id=eq.${encodeURIComponent(safe)}`, payload);
+  return mapUser((rows || [])[0] || null);
+}
+
+// ---------------------------------------------------------------- entry ops
+function mapEntry(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    date: row.entry_date,          // 'YYYY-MM-DD'
+    weight: row.weight != null ? Number(row.weight) : null,
+    source: row.source || "manual",
+    timestamp: row.measured_at,
+  };
+}
+
+const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
+
+async function listEntries(userId, { limit } = {}) {
+  const safe = String(userId).replace(/[^a-zA-Z0-9-]/g, "");
+  let q = `/rest/v1/weight_entries?select=id,entry_date,weight,source,measured_at&user_id=eq.${encodeURIComponent(safe)}&order=entry_date.desc`;
   if (limit) q += `&limit=${encodeURIComponent(limit)}`;
   const rows = await supabaseRequest("GET", q);
-  return (rows || []).map(mapRow);
+  return (rows || []).map(mapEntry);
 }
 
-async function addEntry(input) {
-  const payload = toPayload(input);
-  if (payload.weight === undefined) throw new Error("weight is required.");
-  const rows = await supabaseRequest("POST", "/rest/v1/weight_entries", payload);
-  return mapRow((rows || [])[0]);
+function entryPayload(userId, input) {
+  const date = isDate(input.date) ? input.date : null;
+  if (!date) throw new Error("Valid date (YYYY-MM-DD) is required.");
+  const weight = Number(input.weight);
+  if (!isFinite(weight) || weight <= 0) throw new Error("Valid weight is required.");
+  return {
+    user_id: userId,
+    entry_date: date,
+    weight,
+    measured_at: input.timestamp ? new Date(input.timestamp).toISOString() : new Date(`${date}T12:00:00Z`).toISOString(),
+    source: input.source === "import" ? "import" : "manual",
+  };
 }
 
-async function addEntries(list) {
-  const payloads = (list || []).map(toPayload).filter((p) => p.weight !== undefined);
+// One entry per calendar day — latest write wins (upsert on user_id, entry_date).
+async function upsertEntry(userId, input) {
+  const payload = entryPayload(userId, input);
+  const rows = await supabaseRequest("POST", "/rest/v1/weight_entries?on_conflict=user_id,entry_date", payload);
+  return mapEntry((rows || [])[0]);
+}
+
+async function upsertEntries(userId, list) {
+  const payloads = [];
+  for (const item of list || []) {
+    try { payloads.push(entryPayload(userId, item)); } catch { /* skip invalid */ }
+  }
   if (!payloads.length) return [];
-  const rows = await supabaseRequest("POST", "/rest/v1/weight_entries", payloads);
-  return (rows || []).map(mapRow);
+  const rows = await supabaseRequest("POST", "/rest/v1/weight_entries?on_conflict=user_id,entry_date", payloads);
+  return (rows || []).map(mapEntry);
 }
 
-async function deleteEntry(id) {
-  const safe = String(id).replace(/[^a-zA-Z0-9-]/g, "");
-  if (!safe) throw new Error("id is required.");
-  await supabaseRequest("DELETE", `/rest/v1/weight_entries?id=eq.${encodeURIComponent(safe)}`);
+async function deleteEntry(userId, id) {
+  const safeUser = String(userId).replace(/[^a-zA-Z0-9-]/g, "");
+  const safeId = String(id).replace(/[^a-zA-Z0-9-]/g, "");
+  if (!safeId) throw new Error("id is required.");
+  await supabaseRequest(
+    "DELETE",
+    `/rest/v1/weight_entries?id=eq.${encodeURIComponent(safeId)}&user_id=eq.${encodeURIComponent(safeUser)}`
+  );
 }
 
 module.exports = {
   jsonResponse,
-  checkPin,
+  // auth
+  authFromEvent,
+  signToken,
+  verifyPasscode,
+  normalizeUsername,
+  validUsername,
+  // users
+  findUserRow,
+  getUserById,
+  createUser,
+  updateUser,
+  mapUser,
+  // entries
   listEntries,
-  addEntry,
-  addEntries,
+  upsertEntry,
+  upsertEntries,
   deleteEntry,
 };

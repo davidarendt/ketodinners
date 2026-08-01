@@ -1,14 +1,14 @@
 {
-  "name": "Weight Tracker",
-  "short_name": "Weight",
-  "description": "Personal weight and body-composition tracker.",
+  "name": "The Almanac",
+  "short_name": "Almanac",
+  "description": "A record of mass & trend — weight tracking with rolling averages and goal projection.",
   "start_url": "/weight/",
   "scope": "/weight/",
   "id": "/weight/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0F1720",
-  "theme_color": "#0F1720",
+  "background_color": "#0c0a09",
+  "theme_color": "#0c0a09",
   "icons": [
     { "src": "/weight/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
     { "src": "/weight/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }

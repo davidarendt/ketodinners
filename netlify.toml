@@ -47,6 +47,11 @@
 
 # --- Weight tracker (side project at /weight/) ---
 [[redirects]]
+  from = "/api/weight-auth"
+  to = "/.netlify/functions/weight-auth"
+  status = 200
+
+[[redirects]]
   from = "/api/weight-entries"
   to = "/.netlify/functions/weight-entries"
   status = 200
