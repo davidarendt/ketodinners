@@ -104,8 +104,13 @@ exports.handler = async function handler(event) {
   // Bulk history import: { key, entries: [ {weight/value, date/startDate}, … ] }.
   const bulk = Array.isArray(F.entries) ? F.entries : Array.isArray(body.entries) ? body.entries : null;
   if (bulk) {
-    const clean = [];
-    for (const raw of bulk) { const n = normalizeBulkEntry(raw); if (n) clean.push(n); }
+    // De-dupe to one row per calendar day (later item in the batch wins) — a
+    // single upsert can't touch the same (user, day) twice, and Health often
+    // has multiple weigh-ins per day.
+    const byDate = {};
+    let invalid = 0;
+    for (const raw of bulk) { const n = normalizeBulkEntry(raw); if (n) byDate[n.date] = n; else invalid++; }
+    const clean = Object.keys(byDate).map(function (d) { return byDate[d]; });
     if (!clean.length) {
       return jsonResponse(400, {
         error: "No valid entries found in the batch.",
@@ -116,7 +121,7 @@ exports.handler = async function handler(event) {
     }
     const added = await upsertEntries(userRow.id, clean).catch(function () { return null; });
     if (added == null) return jsonResponse(503, { error: "Batch save failed." });
-    return jsonResponse(200, { ok: true, imported: added.length, received: bulk.length, skipped: bulk.length - clean.length });
+    return jsonResponse(200, { ok: true, imported: added.length, days: clean.length, received: bulk.length, skipped: invalid });
   }
 
   const rawWeight = F.weight !== undefined ? F.weight
