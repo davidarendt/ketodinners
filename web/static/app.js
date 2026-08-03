@@ -305,7 +305,7 @@ function ensureCartBar() {
     clr.addEventListener('click', clearSelection);
     var build = document.createElement('button');
     build.className = 'cart-build';
-    build.textContent = 'Build Shopping List';
+    build.textContent = 'Build the list';
     build.addEventListener('click', buildAndShowShopping);
     actions.appendChild(clr);
     actions.appendChild(build);
@@ -321,7 +321,9 @@ function updateCartBar() {
   bar.hidden = n === 0;
   document.body.classList.toggle('has-cart-bar', n > 0);
   var info = document.getElementById('cartInfo');
-  if (info) info.textContent = n + ' meal' + (n === 1 ? '' : 's') + ' selected';
+  if (info) info.textContent = n + ' dinner' + (n === 1 ? '' : 's') + ' selected';
+  var badge = document.getElementById('tabBadge');
+  if (badge) { badge.hidden = n === 0; badge.textContent = n; }
 }
 
 // ---- shopping list view ----
@@ -361,20 +363,11 @@ function buildAndShowShopping() {
 
 function renderShopping(el, data) {
   el.innerHTML = '';
-  var card = document.createElement('div');
-  card.className = 'shop-card';
-  el.appendChild(card);
   var head = document.createElement('div');
-  head.className = 'shop-head';
-  var title = document.createElement('div');
-  title.className = 'shop-title';
-  title.textContent = 'Shopping List';
-  var sub = document.createElement('div');
-  sub.className = 'shop-sub';
-  sub.textContent = (data.selected || []).length + ' meals · ' + (data.selected || []).join(', ');
-  head.appendChild(title);
-  head.appendChild(sub);
-  card.appendChild(head);
+  head.className = 'view-head';
+  var n = (data.selected || []).length;
+  head.innerHTML = '<h1>Shopping list</h1><div class="shop-sub">' + n + ' dinner' + (n === 1 ? '' : 's') + ' · ' + escapeHtml((data.selected || []).join(', ')) + '</div>';
+  el.appendChild(head);
 
   var toolbar = document.createElement('div');
   toolbar.className = 'shop-toolbar';
@@ -383,11 +376,11 @@ function renderShopping(el, data) {
   prog.id = 'shopProgress';
   var guide = document.createElement('button');
   guide.className = 'shop-guided';
-  guide.textContent = '▶ Guided Shopping';
+  guide.textContent = '▶ Guided shopping';
   guide.addEventListener('click', startGuide);
   toolbar.appendChild(prog);
   toolbar.appendChild(guide);
-  card.appendChild(toolbar);
+  el.appendChild(toolbar);
 
   var container = document.createElement('div');
   container.className = 'shop-cats';
@@ -428,7 +421,7 @@ function renderShopping(el, data) {
   }
   addCat(data.consolidated || {}, false);
   addCat(data.asNeeded || {}, true);
-  card.appendChild(container);
+  el.appendChild(container);
   updateShopProgress();
 }
 function toggleHave(text, row) {
@@ -446,8 +439,9 @@ function updateShopProgress() {
 }
 function renderShoppingPlaceholder() {
   var el = document.getElementById('viewShopping');
-  el.innerHTML = '<div class="shop-empty"><p>No meals selected yet.</p>'
-    + '<p>Go to <strong>Meal Plan</strong> or <strong>Browse All</strong>, tap the checkbox on each meal you want to shop for, then tap <strong>Build Shopping List</strong>.</p></div>';
+  el.innerHTML = '<div class="view-head"><h1>Shopping list</h1></div>'
+    + '<div class="shop-empty"><p>No dinners selected yet.</p>'
+    + '<p>Go to <strong>Plan</strong> or <strong>Browse</strong>, tap the checkbox on each dinner you want to shop for, then tap <strong>Build the list</strong>.</p></div>';
 }
 
 // ---- guided shopping (one item at a time, single reused Walmart tab) ----
@@ -538,37 +532,93 @@ function renderMealPlan() {
     (r.positions || []).forEach(function(p) { seq.push({ pos: p, recipe: r }); });
   });
   seq.sort(function(a, b) { return a.pos - b.pos; });
-  var card = document.createElement('div');
-  card.className = 'week-card meal-card-full';
+  var cooked = 0;
+  seq.forEach(function(item) { if ((states[item.recipe.id] || {}).completed) cooked++; });
+  var head = document.createElement('div');
+  head.className = 'view-head';
+  head.innerHTML = '<h1>Your rotation</h1><div class="sub">' + seq.length + ' dinners · <b>' + cooked + ' cooked</b> · none repeated</div>';
+  el.appendChild(head);
   var list = document.createElement('div');
-  list.className = 'meal-list';
+  list.className = 'rotation';
   seq.forEach(function(item) { list.appendChild(makeRow(item.recipe, item.pos)); });
-  card.appendChild(list);
-  el.appendChild(card);
+  el.appendChild(list);
 }
 
-function applyBrowseFilter(list, protein) {
-  list.querySelectorAll('a.meal-row').forEach(function(row) {
-    row.style.display = (protein === 'all' || row.dataset.protein === protein) ? '' : 'none';
-  });
+function dishMeta(r) {
+  var parts = [];
+  if (r.nutrition && r.nutrition.netCarbs != null) parts.push('<span class="net">' + r.nutrition.netCarbs + 'g net</span>');
+  if (r.totalTime) parts.push(escapeHtml(r.totalTime));
+  if (r.cuisine) parts.push(escapeHtml(r.cuisine));
+  return parts.join(' · ');
+}
+
+function makeDishCard(r) {
+  var a = document.createElement('a');
+  a.className = 'dish-card' + ((states[r.id] || {}).completed ? ' done' : '');
+  a.href = recipeUrl(r.id);
+  a.dataset.protein = getProtein(r.id);
+  a.dataset.recipeId = r.id;
+  a.dataset.title = r.title.toLowerCase();
+  var thumb = document.createElement('div');
+  thumb.className = 'dish-thumb' + (r.image ? '' : ' ph');
+  if (r.image) {
+    var img = document.createElement('img');
+    img.loading = 'lazy'; img.src = r.image; img.alt = '';
+    thumb.appendChild(img);
+  }
+  var info = document.createElement('div');
+  info.className = 'dish-info';
+  var t = document.createElement('div');
+  t.className = 'dish-title';
+  t.textContent = r.title;
+  var meta = document.createElement('div');
+  meta.className = 'dish-meta';
+  meta.innerHTML = dishMeta(r);
+  var rate = document.createElement('div');
+  rate.className = 'dish-rate';
+  rate.appendChild(renderStars(r.id));
+  rate.appendChild(renderTeddy(r.id));
+  rate.appendChild(renderEase(r.id));
+  info.appendChild(t); info.appendChild(meta); info.appendChild(rate);
+  a.appendChild(thumb); a.appendChild(info); a.appendChild(renderSelect(r.id));
+  return a;
 }
 
 function renderBrowse() {
   var el = document.getElementById('viewBrowse');
   el.innerHTML = '';
 
-  var header = document.createElement('div');
-  header.className = 'browse-header';
-  header.textContent = 'All Recipes';
+  var head = document.createElement('div');
+  head.className = 'view-head';
+  head.innerHTML = '<h1>Browse</h1>';
+
+  var search = document.createElement('div');
+  search.className = 'search-bar';
+  search.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>';
+  var input = document.createElement('input');
+  input.type = 'search';
+  input.placeholder = 'Search ' + recipes.length + ' dinners';
+  search.appendChild(input);
 
   var filterBar = document.createElement('div');
   filterBar.className = 'filter-bar';
 
   var list = document.createElement('div');
-  list.className = 'meal-list';
+  list.className = 'dish-list';
   recipes.slice().sort(function(a, b) { return a.title.localeCompare(b.title); }).forEach(function(r) {
-    list.appendChild(makeRow(r));
+    list.appendChild(makeDishCard(r));
   });
+
+  var curProtein = 'all';
+  function apply() {
+    var q = (input.value || '').toLowerCase().trim();
+    list.querySelectorAll('.dish-card').forEach(function(c) {
+      var okP = (curProtein === 'all' || c.dataset.protein === curProtein);
+      var okQ = (!q || c.dataset.title.indexOf(q) >= 0);
+      c.style.display = (okP && okQ) ? '' : 'none';
+    });
+  }
+  input.addEventListener('input', apply);
 
   PROTEINS.forEach(function(p) {
     var btn = document.createElement('button');
@@ -577,12 +627,13 @@ function renderBrowse() {
     btn.addEventListener('click', function() {
       filterBar.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
       btn.classList.add('active');
-      applyBrowseFilter(list, p);
+      curProtein = p; apply();
     });
     filterBar.appendChild(btn);
   });
 
-  el.appendChild(header);
+  el.appendChild(head);
+  el.appendChild(search);
   el.appendChild(filterBar);
   el.appendChild(list);
 }

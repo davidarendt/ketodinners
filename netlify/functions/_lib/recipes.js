@@ -240,6 +240,25 @@ function extractInstructionsFromJsonLd(jsonLd) {
   return instructions;
 }
 
+function parseNutritionNumber(value) {
+  if (value == null) return null;
+  const m = String(value).match(/[\d.]+/);
+  return m ? Number(m[0]) : null;
+}
+
+function extractNutrition(jsonLd) {
+  const n = jsonLd.nutrition;
+  if (!n || typeof n !== "object") return null;
+  const out = {
+    calories: parseNutritionNumber(n.calories),
+    protein: parseNutritionNumber(n.proteinContent),
+    fat: parseNutritionNumber(n.fatContent),
+    netCarbs: parseNutritionNumber(n.carbohydrateContent),
+  };
+  if (out.calories == null && out.protein == null && out.fat == null && out.netCarbs == null) return null;
+  return out;
+}
+
 function loadRawHtmlRecipes() {
   const dir = rawHtmlDir();
   if (!fs.existsSync(dir)) return [];
@@ -265,6 +284,9 @@ function loadRawHtmlRecipes() {
     const servings = typeof jsonLd.recipeYield === "string" ? jsonLd.recipeYield.trim() : null;
     const prepTime = parseIsoDuration(jsonLd.prepTime);
     const cookTime = parseIsoDuration(jsonLd.cookTime);
+    const totalTime = parseIsoDuration(jsonLd.totalTime) || cookTime || prepTime;
+    const cuisine = typeof jsonLd.recipeCuisine === "string" ? jsonLd.recipeCuisine.trim() : null;
+    const nutrition = extractNutrition(jsonLd);
     const imageFromLd =
       typeof jsonLd.image === "string"
         ? jsonLd.image
@@ -279,6 +301,9 @@ function loadRawHtmlRecipes() {
       image,
       prepTime,
       cookTime,
+      totalTime,
+      cuisine,
+      nutrition,
       ingredients,
       instructions,
     });

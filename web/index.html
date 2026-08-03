@@ -3,41 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<title>Keto Friendly Dinners</title>
+<title>Dinner Planner</title>
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#1C2B3A">
+<meta name="theme-color" content="#56633F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Keto Dinners">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Dinner Planner">
+<meta property="og:title" content="Dinner Planner">
+<meta property="og:description" content="Twelve weeks of keto dinners, no repeats — with the shopping list already written.">
+<meta property="og:image" content="/og-image.png">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-<div class="hero">
-  <h1>Keto Friendly Dinners</h1>
-  <p>Strict Keto · Master Rotation · <span id="dinnerCount">…</span> Dinners</p>
-  <div class="view-tabs">
-    <button class="tab active" data-view="mealplan">Meal Plan</button>
-    <button class="tab" data-view="browse">Browse All</button>
-    <button class="tab" data-view="shopping">Shopping List</button>
-  </div>
-  <div class="legend">
-    <span>Easy &lt;15 min</span>
-    <span>Med 15–30 min</span>
-    <span>Hard &gt;30 min</span>
-    <span>K = Kid Friendly</span>
-  </div>
-</div>
-<div class="wrap">
-  <div id="viewMealplan" class="grid"></div>
-  <div id="viewBrowse" class="browse-wrap" hidden></div>
-  <div id="viewShopping" class="shop-wrap" hidden></div>
-  <p id="loadingMsg" class="loading-msg">Loading recipes…</p>
-</div>
+<main id="main">
+  <section id="viewMealplan" class="view"></section>
+  <section id="viewBrowse" class="view" hidden></section>
+  <section id="viewShopping" class="view" hidden></section>
+  <p id="loadingMsg" class="loading-msg">Setting the table…</p>
+</main>
+
+<nav class="tabbar">
+  <button class="tab active" data-view="mealplan">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+    <span>Plan</span>
+  </button>
+  <button class="tab" data-view="browse">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <span>Browse</span>
+  </button>
+  <button class="tab" data-view="shopping">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    <span>Shop</span>
+    <span class="tab-badge" id="tabBadge" hidden>0</span>
+  </button>
+</nav>
+
 <script src="/static/app.js"></script>
-<script src="/static/install.js"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
