@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="/weight/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400&family=IBM+Plex+Sans:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/weight/static/styles.css">
 </head>
 <body>
@@ -30,14 +30,10 @@
       <button class="auth-tab" data-mode="register">Create account</button>
     </div>
     <form id="authForm" class="auth-form" autocomplete="off">
-      <label class="field">
-        <span class="field-label">Username</span>
-        <input id="authUser" class="field-input" type="text" inputmode="text" autocapitalize="none" autocomplete="username" spellcheck="false" placeholder="e.g. dave">
-      </label>
-      <label class="field">
-        <span class="field-label">Passcode</span>
-        <input id="authPass" class="field-input" type="password" autocomplete="current-password" placeholder="••••••">
-      </label>
+      <label class="field"><span class="field-label">Username</span>
+        <input id="authUser" class="field-input" type="text" autocapitalize="none" autocomplete="username" spellcheck="false" placeholder="e.g. dave"></label>
+      <label class="field"><span class="field-label">Passcode</span>
+        <input id="authPass" class="field-input" type="password" autocomplete="current-password" placeholder="••••••"></label>
       <button id="authSubmit" type="submit" class="btn">Sign in</button>
       <p id="authError" class="auth-error" hidden></p>
       <p id="authHint" class="auth-hint">Your entries are private to your account. Share the link — everyone gets their own.</p>
@@ -45,8 +41,33 @@
   </div>
 </section>
 
-<!-- Dashboard (rendered by app.js) -->
-<main id="dashScreen" class="dash" hidden></main>
+<!-- App shell -->
+<div id="app" hidden>
+  <header class="appbar">
+    <div class="appbar-brand">The Almanac</div>
+    <div class="appbar-title" id="appTitle">Dashboard</div>
+    <button class="appbar-gear" id="gearBtn" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.05.05a2 2 0 1 1-2.83 2.83l-.05-.05a1.7 1.7 0 0 0-2.87 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 6.3 19.4l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05A1.7 1.7 0 0 0 4.6 13.5H4.5a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.87l-.05-.05a2 2 0 1 1 2.83-2.83l.05.05A1.7 1.7 0 0 0 10.5 4.6V4.5a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.87 1.2l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05A1.7 1.7 0 0 0 19.4 10.5"/></svg>
+  </button>
+</header>
+
+  <main id="screen"></main>
+
+  <nav class="tabbar">
+    <button class="tab active" data-section="dashboard">
+      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>
+      <span>Dashboard</span></button>
+    <button class="tab" data-section="trends">
+      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 8-9"/><path d="M21 5v4h-4"/></svg>
+      <span>Trends</span></button>
+    <button class="tab" data-section="goal">
+      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></svg>
+      <span>Goal</span></button>
+    <button class="tab" data-section="log">
+      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      <span>Log</span></button>
+  </nav>
+</div>
 
 <script src="/weight/static/app.js"></script>
 <script>

@@ -187,6 +187,9 @@ const METRIC_COLS = {
   visceralFat: "visceral_fat",
   bmi: "bmi",
   waist: "waist",
+  metabolicAge: "metabolic_age",
+  bmr: "bmr",
+  boneMass: "bone_mass",
 };
 
 function mapEntry(row) {
