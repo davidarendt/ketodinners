@@ -53,9 +53,13 @@ exports.handler = async function handler(event) {
     });
   }
 
+  // Tolerate stray whitespace in field names (a common Shortcuts slip, e.g. "weight ").
+  const F = {};
+  Object.keys(body).forEach(function (k) { F[String(k).trim()] = body[k]; });
+
   const headers = event.headers || {};
   const qs = event.queryStringParameters || {};
-  const key = body.key || body.Key || qs.key || headers["x-api-key"] || headers["X-Api-Key"] || "";
+  const key = F.key || F.Key || qs.key || headers["x-api-key"] || headers["X-Api-Key"] || "";
 
   const userRow = await findUserByApiKey(key).catch(() => null);
   if (!userRow) {
@@ -67,9 +71,9 @@ exports.handler = async function handler(event) {
     });
   }
 
-  const rawWeight = body.weight !== undefined ? body.weight
-    : body.Weight !== undefined ? body.Weight
-    : body.bodyMass !== undefined ? body.bodyMass
+  const rawWeight = F.weight !== undefined ? F.weight
+    : F.Weight !== undefined ? F.Weight
+    : F.bodyMass !== undefined ? F.bodyMass
     : undefined;
   const parsed = extractNumber(rawWeight);
   if (!isFinite(parsed.value) || parsed.value <= 0) {
@@ -85,21 +89,21 @@ exports.handler = async function handler(event) {
     });
   }
 
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(String(body.date || ""))
-    ? body.date
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(String(F.date || ""))
+    ? F.date
     : new Date().toISOString().slice(0, 10);
 
   try {
     const entry = await upsertEntry(userRow.id, {
       date,
       weight: parsed.value,
-      bodyFatPct: body.bodyFatPct,
-      muscleMass: body.muscleMass,
-      bodyWaterPct: body.bodyWaterPct,
-      visceralFat: body.visceralFat,
-      bmi: body.bmi,
-      waist: body.waist,
-      note: body.note,
+      bodyFatPct: F.bodyFatPct,
+      muscleMass: F.muscleMass,
+      bodyWaterPct: F.bodyWaterPct,
+      visceralFat: F.visceralFat,
+      bmi: F.bmi,
+      waist: F.waist,
+      note: F.note,
       source: "import",
     });
     return jsonResponse(200, { ok: true, entry });
