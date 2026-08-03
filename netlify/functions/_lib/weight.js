@@ -209,6 +209,17 @@ function mapEntry(row) {
 const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
 const ENTRY_SELECT = "id,entry_date,weight,source,measured_at,note," + Object.values(METRIC_COLS).join(",");
 
+// Tolerant numeric parse — Apple Health / Shortcuts may send "190.6 lb",
+// "190,6", or a plain number. Pulls the first number out of a string.
+function coerceNumber(v) {
+  if (typeof v === "number") return v;
+  if (typeof v === "string") {
+    const m = v.replace(",", ".").match(/-?\d+(?:\.\d+)?/);
+    return m ? parseFloat(m[0]) : NaN;
+  }
+  return NaN;
+}
+
 async function listEntries(userId, { limit } = {}) {
   const safe = String(userId).replace(/[^a-zA-Z0-9-]/g, "");
   let q = `/rest/v1/weight_entries?select=${ENTRY_SELECT}&user_id=eq.${encodeURIComponent(safe)}&order=entry_date.desc`;
@@ -220,7 +231,7 @@ async function listEntries(userId, { limit } = {}) {
 function entryPayload(userId, input) {
   const date = isDate(input.date) ? input.date : null;
   if (!date) throw new Error("Valid date (YYYY-MM-DD) is required.");
-  const weight = Number(input.weight);
+  const weight = coerceNumber(input.weight);
   if (!isFinite(weight) || weight <= 0) throw new Error("Valid weight is required.");
   const payload = {
     user_id: userId,
@@ -234,7 +245,7 @@ function entryPayload(userId, input) {
   for (const key of Object.keys(METRIC_COLS)) {
     const v = input[key];
     if (v !== undefined && v !== null && v !== "") {
-      const n = Number(v);
+      const n = coerceNumber(v);
       if (isFinite(n)) payload[METRIC_COLS[key]] = n;
     }
   }
