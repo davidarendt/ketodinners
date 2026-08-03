@@ -1,4 +1,16 @@
-const { jsonResponse, findUserByApiKey, upsertEntry } = require("./_lib/weight");
+const { jsonResponse, findUserByApiKey, upsertEntry, upsertEntries } = require("./_lib/weight");
+
+// Normalize a date that might arrive as "2026-03-15", a full ISO timestamp, or
+// any Date-parseable string, down to "YYYY-MM-DD".
+function normDate(v) {
+  const s = String(v == null ? "" : v).trim();
+  if (!s) return null;
+  const iso = s.match(/^\d{4}-\d{2}-\d{2}/);
+  if (iso) return iso[0];
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+  return null;
+}
 
 // Pull a number out of whatever the Shortcut sends: a number, a string like
 // "190.6 lb" / "190,6", or a Health-sample object (…value / quantity / magnitude).
@@ -27,6 +39,24 @@ function preview(v) {
     const s = typeof v === "string" ? v : JSON.stringify(v);
     return String(s).slice(0, 140);
   } catch (e) { return String(v).slice(0, 140); }
+}
+
+// Clean one item of a bulk batch into { date, weight, ...metrics } or null.
+function normalizeBulkEntry(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const R = {};
+  Object.keys(raw).forEach(function (k) { R[String(k).trim()] = raw[k]; });
+  const wRaw = R.weight !== undefined ? R.weight : R.Weight !== undefined ? R.Weight : R.value;
+  const w = extractNumber(wRaw).value;
+  if (!isFinite(w) || w <= 0) return null;
+  const date = normDate(R.date || R.startDate || R.endDate || R.day);
+  if (!date) return null;
+  const out = { date: date, weight: Math.round(w * 10) / 10, source: "import" };
+  ["bodyFatPct", "muscleMass", "bodyWaterPct", "visceralFat", "bmi", "waist"].forEach(function (k) {
+    if (R[k] != null && R[k] !== "") { const n = extractNumber(R[k]).value; if (isFinite(n)) out[k] = Math.round(n * 10) / 10; }
+  });
+  if (typeof R.note === "string") out.note = R.note;
+  return out;
 }
 
 // Apple Health / Shortcuts ingest. The personal api_key IS the credential.
@@ -69,6 +99,24 @@ exports.handler = async function handler(event) {
       keyReceived: key ? String(key).slice(0, 6) + "…(" + String(key).length + " chars)" : "(none sent)",
       fieldsReceived: Object.keys(body),
     });
+  }
+
+  // Bulk history import: { key, entries: [ {weight/value, date/startDate}, … ] }.
+  const bulk = Array.isArray(F.entries) ? F.entries : Array.isArray(body.entries) ? body.entries : null;
+  if (bulk) {
+    const clean = [];
+    for (const raw of bulk) { const n = normalizeBulkEntry(raw); if (n) clean.push(n); }
+    if (!clean.length) {
+      return jsonResponse(400, {
+        error: "No valid entries found in the batch.",
+        hint: 'Each item needs a weight and a date, e.g. {"key":"…","entries":[{"date":"2026-01-04","weight":244}]}.',
+        received: bulk.length,
+        sample: bulk.length ? preview(bulk[0]) : null,
+      });
+    }
+    const added = await upsertEntries(userRow.id, clean).catch(function () { return null; });
+    if (added == null) return jsonResponse(503, { error: "Batch save failed." });
+    return jsonResponse(200, { ok: true, imported: added.length, received: bulk.length, skipped: bulk.length - clean.length });
   }
 
   const rawWeight = F.weight !== undefined ? F.weight
