@@ -82,6 +82,29 @@ function applyOverrides(html, override) {
   return html;
 }
 
+// Dinner Planner reskin: redefine the raw file's CSS variables + swap fonts.
+// Injected after the file's own <style>, so it wins by cascade order — restyles
+// every recipe page without touching the 105 source files.
+const RESKIN_STYLES = `<link href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet"><style>
+:root{--cream:#f9f4ed;--terra:#c67139;--olive:#7a8a5e;--navy:#201e1d;--gold:#f6a06b;--text:#201e1d;--muted:#645c50}
+body{font-family:'Figtree',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:400}
+.hero h1,.sv,.step-num,.step-title,.notes-box h3{font-family:'Caprasimo',Georgia,serif;font-weight:400}
+.hero h1{letter-spacing:-0.015em}
+.badge{border-radius:999px;letter-spacing:.06em;font-weight:700}
+.week-badge{border-radius:999px}
+.desc{font-family:'Figtree',sans-serif;font-style:italic;border-left-color:var(--terra)}
+.sec-label{color:var(--terra)}
+.sec-label::after{background:var(--terra);opacity:.35}
+.stat .sv{color:var(--gold)}
+.stat:nth-child(2) .sv,.stat:nth-child(3) .sv{color:#f5ead8}
+.step-num{background:var(--terra)}
+.step-title{color:var(--navy)}
+.ing-group-label{color:var(--olive)}
+.dot{color:var(--terra)}
+.tag{border-radius:999px;border-color:var(--olive);color:var(--olive)}
+.notes-box{border-radius:16px}
+</style>`;
+
 const MOBILE_STYLES = `<style>
 @media(max-width:480px){
   .hero{height:300px}
@@ -101,7 +124,7 @@ const MOBILE_STYLES = `<style>
 
 function editPanel(slug, current) {
   return `<style>
-#edit-fab{position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:#1C2B3A;color:#fff;border:none;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3);z-index:999;opacity:.65;transition:opacity .2s}
+#edit-fab{position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:#c67139;color:#fff;border:none;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3);z-index:999;opacity:.65;transition:opacity .2s}
 #edit-fab:hover{opacity:1}
 #edit-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
 #edit-modal.open{display:flex}
@@ -279,7 +302,7 @@ exports.handler = async function(event) {
 
   const backBtn = `<a href="/" style="position:absolute;top:16px;left:20px;z-index:10;color:rgba(255,255,255,.85);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;text-decoration:none;letter-spacing:.3px;display:flex;align-items:center;gap:6px;text-shadow:0 1px 4px rgba(0,0,0,.4)">&#8592; All Recipes</a>`;
   html = html.replace(/(<div class="hero">)/, '$1' + backBtn);
-  html = html.replace('</head>', MOBILE_STYLES + '\n</head>');
+  html = html.replace('</head>', RESKIN_STYLES + MOBILE_STYLES + '\n</head>');
   html = html.replace('</body>', mealimeLink + '\n' + editPanel(slug, current) + '\n</body>');
 
   return {
