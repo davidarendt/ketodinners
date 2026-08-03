@@ -93,16 +93,19 @@ exports.handler = async function handler(event) {
     ? F.date
     : new Date().toISOString().slice(0, 10);
 
+  // Health samples are doubles with float noise (e.g. 192.19999…) — round to 0.1.
+  const round1 = (v) => (v == null || v === "" || isNaN(Number(v)) ? v : Math.round(Number(v) * 10) / 10);
+
   try {
     const entry = await upsertEntry(userRow.id, {
       date,
-      weight: parsed.value,
-      bodyFatPct: F.bodyFatPct,
-      muscleMass: F.muscleMass,
-      bodyWaterPct: F.bodyWaterPct,
-      visceralFat: F.visceralFat,
-      bmi: F.bmi,
-      waist: F.waist,
+      weight: Math.round(parsed.value * 10) / 10,
+      bodyFatPct: round1(F.bodyFatPct),
+      muscleMass: round1(F.muscleMass),
+      bodyWaterPct: round1(F.bodyWaterPct),
+      visceralFat: round1(F.visceralFat),
+      bmi: round1(F.bmi),
+      waist: round1(F.waist),
       note: F.note,
       source: "import",
     });
