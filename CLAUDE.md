@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo actually is
 
-A keto meal-plan site deployed to Netlify (site: `ketodinners`). Two coexisting stacks:
+A keto meal-plan site deployed to Netlify (site: `ketodinners`), **rebranded in the UI as "Dinner Planner"** (cream/terracotta/sage, Caprasimo + Figtree). The backend, data layer, and Supabase project names are unchanged — only the skin. Two coexisting stacks:
 
 - **Deployed app** — static SPA in `web/` + Netlify Functions in `netlify/functions/`, backed by Supabase. This is what users see.
 - **Legacy Python tools** — `meal_planner.py` (CLI) and `meal_planner_web.py` (local Flask-style server). Predate the Netlify deploy and are not part of the live site. Only touch them if the user explicitly says so.
@@ -72,6 +72,16 @@ Netlify Functions have a **6 MB request body cap**. Base64 inflates ~33%, so raw
 ### Supabase project matching
 
 There are multiple Supabase projects in this org; the one that backs this site is `OlogyCalendar` (project ref `qrakimvzrtuboyhexgli`, hosts the `recipe-images` bucket + `recipe_states`/`recipe_overrides`/`cook_log`). The other, `OlogyHQ`, is unrelated infra. `SUPABASE_URL`/`SUPABASE_ANON_KEY` in Netlify env vars must point at OlogyCalendar.
+
+## Dinner Planner reskin (2026-08)
+
+The user-facing skin was rebranded to "Dinner Planner" from a design handoff kit. Key facts for future work:
+
+- **Design system** lives in `web/static/styles.css` (tokens: cream `#f9f4ed` / terracotta `#c67139` / sage `#7a8a5e`, Caprasimo display + Figtree body, pill controls, soft cards). The SPA is a bottom-nav app (Plan / Browse / Shop) — no more top hero/tabs.
+- **Brand assets**: `web/icons/*`, `web/favicon.svg`, `web/static/mark.svg`, `web/og-image.png` (from the kit). Manifest is Dinner Planner (sage theme).
+- **Recipe cards use real macros**: `_lib/recipes.js#loadRawHtmlRecipes` now extracts `cuisine`, `totalTime`, and `nutrition` (calories/protein/fat/netCarbs) from each file's JSON-LD; `recipes.js` passes them through `/api/recipes`. Add new recipe fields in BOTH places.
+- **SSR recipe pages** (`recipe-page.js`) are reskinned WITHOUT editing the 105 raw files: `RESKIN_STYLES` is injected after each file's own `<style>` and **redefines the raw CSS variables** (`--cream`, `--terra`, `--navy`, `--gold`…) + swaps fonts. To restyle recipe pages, edit `RESKIN_STYLES`, not the source files.
+- **Out of scope (deferred, need backend)**: onboarding wizard, $7/mo paywall/subscription, household/multi-user, "Tonight" tab, "Cook mode". The design kit shows these but they were not built.
 
 ## Conventions worth knowing
 
