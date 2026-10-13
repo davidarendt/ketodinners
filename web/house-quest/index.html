@@ -1,0 +1,1304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2F5BEA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="House Quest">
+<link rel="manifest" href="/house-quest/manifest.json">
+<link rel="apple-touch-icon" href="/house-quest/icons/apple-touch-icon.png">
+<link rel="icon" href="/house-quest/icons/favicon.ico">
+<title>House Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&amp;family=DM+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2F5BEA}a:hover{color:#1F3FB0}
+.app{width:390px;height:844px;background:#EEF0F3;color:#1B1F27;font-family:'DM Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.disp{font-family:'Bricolage Grotesque',system-ui,sans-serif}
+.scroll{flex:1;overflow-y:auto;padding:12px 16px 28px;display:flex;flex-direction:column;gap:14px}
+.card{background:#FFFFFF;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 0 rgba(27,31,39,.06)}
+.card.target{box-shadow:0 0 0 3px #E08A45}
+.dark{background:#1B1F27;color:#FFFFFF}
+.drop{background:#FFF1E3;border:2px dashed #E08A45}
+.lbl{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5A6170}
+.dark .lbl{color:#A9B0BE}
+.h2{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:20px;font-weight:800;padding:6px 2px 0}
+.row{display:flex;align-items:center;gap:10px}
+.wrap{flex-wrap:wrap;gap:6px}
+.between{justify-content:space-between}
+.col{display:flex;flex-direction:column;gap:4px}
+.chip{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#E3E7EE;color:#3A4150;white-space:nowrap;text-decoration:none}
+.chip.fit{background:#DCE6FF;color:#1F3FB0}
+.chip.later{background:#FBE6D6;color:#8A3E0B}
+.chip.ready{background:#D6F0E2;color:#17603A}
+.chip.boost{background:#FFE7CF;color:#7A3608}
+.chip.season{background:#E9F5D0;color:#3D5A0E}
+.chip.link{background:#FFFFFF;border:1.5px solid #C9CED8;color:#1F3FB0}
+.btn{font:inherit;font-weight:700;font-size:14px;border:0;border-radius:12px;min-height:44px;padding:0 14px;cursor:pointer;background:#E3E7EE;color:#1B1F27;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-sizing:border-box}
+.btn.pri{background:#2F5BEA;color:#FFFFFF}
+.btn.warm{background:#B8520F;color:#FFFFFF}
+.btn.ghost{background:transparent;color:#4A5160}
+.btn.full{width:100%}
+.btn.sm{min-height:36px;font-size:13px;padding:0 12px}
+.iconbtn{font:inherit;width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:#1B1F27;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.iconbtn.on{background:#DDE1E8}
+.meter{height:10px;border-radius:999px;background:#E3E7EE;overflow:hidden}
+.dark .meter{background:#343A47}
+.fill{height:100%;border-radius:999px;background:#2F5BEA}
+.dark .fill{background:#7C9BFF}
+.fill.xp{background:#F0954D}
+.fill.save{background:#2E9E62}
+.vote{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.vote.v3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.vote.v4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.vbtn{font:inherit;font-weight:700;font-size:16px;min-height:44px;border-radius:12px;border:2px solid #D3D8E1;background:#FFFFFF;color:#1B1F27;cursor:pointer}
+.vbtn.txt{font-size:13px;padding:6px 4px;line-height:1.2}
+.vbtn.on{background:#2F5BEA;border-color:#2F5BEA;color:#FFFFFF}
+.catgrid{display:flex;flex-wrap:wrap;gap:8px}
+.cbtn{font:inherit;font-size:14px;font-weight:500;min-height:40px;padding:0 14px;border-radius:999px;border:2px solid #D3D8E1;background:#FFFFFF;color:#1B1F27;cursor:pointer}
+.cbtn.on{background:#1B1F27;border-color:#1B1F27;color:#FFFFFF}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.flabel{font-size:13px;font-weight:700;color:#3A4150}
+.inp{font:inherit;font-size:16px;min-height:48px;padding:0 14px;border-radius:12px;border:2px solid #D3D8E1;background:#FFFFFF;color:#1B1F27;box-sizing:border-box;width:100%;min-width:0}
+.inp:focus{outline:none;border-color:#2F5BEA}
+.fund{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.fbtn{font:inherit;text-align:left;border:2px solid #D3D8E1;background:#FFFFFF;color:#1B1F27;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:4px;cursor:pointer}
+.fbtn b{font-size:15px}
+.fbtn span{font-size:12px;color:#565D6C}
+.fbtn.on{border-color:#2F5BEA;background:#EEF3FF}
+.tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:#FFFFFF;border-top:1px solid #DDE1E8;padding:6px 4px 22px}
+.tab{font:inherit;font-size:11px;font-weight:700;background:transparent;border:0;color:#5F6675;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:52px;justify-content:center;cursor:pointer;position:relative}
+.tab.on{color:#2F5BEA}
+.badge{position:absolute;top:2px;right:12px;background:#B8520F;color:#FFFFFF;font-size:11px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+.seg{display:flex;background:#DDE1E8;border-radius:999px;padding:3px}
+.sbtn{font:inherit;font-size:13px;font-weight:700;border:0;background:transparent;color:#3A4150;border-radius:999px;padding:0 10px;min-height:34px;cursor:pointer}
+.sbtn.on{background:#FFFFFF;color:#1B1F27}
+.mini{font-size:13px;color:#565D6C}
+.imp{display:flex;gap:12px;font-size:13px;color:#3A4150}
+.imp b{font-weight:700;color:#1B1F27}
+.toast{position:absolute;left:16px;right:16px;top:64px;pointer-events:none;box-shadow:0 8px 24px rgba(27,31,39,.25);background:#1B1F27;color:#FFFFFF;border-radius:14px;padding:14px 16px;font-size:14px;font-weight:500;z-index:30}
+.die{width:96px;height:96px;border-radius:24px;background:#F0954D;display:flex;align-items:center;justify-content:center;align-self:center;color:#1B1F27}
+.done{opacity:.6;text-decoration:line-through}
+.sw{font:inherit;width:52px;height:32px;border-radius:16px;border:0;background:#C9CED8;position:relative;cursor:pointer;flex:none}
+.sw::after{content:'';position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:12px;background:#FFFFFF;transition:left .15s}
+.sw.on{background:#2F5BEA}
+.sw.on::after{left:24px}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px}
+.divider{height:1px;background:#E3E7EE}
+.pos{color:#1F3FB0;font-weight:700}
+.neg{color:#A3470D;font-weight:700}
+.holi{display:flex;gap:12px;align-items:center}
+.hdate{width:48px;height:52px;border-radius:12px;background:#1B1F27;color:#FFFFFF;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none}
+.hdate span{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#C3C8D2}
+.hdate b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:20px}
+.hand{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 6px;margin:0 -2px}
+.pc{font:inherit;flex:0 0 112px;height:156px;border-radius:16px;border:3px solid #C9CED8;background:#F6F7F9;padding:10px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;cursor:pointer;color:#1B1F27;box-sizing:border-box;transition:transform .15s}
+.pc i{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#565D6C}
+.pc .gl{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:34px;font-weight:800;line-height:1;color:#3A4150}
+.pc b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:15px;line-height:1.1}
+.pc .ds{font-size:13px;line-height:1.35;color:#2C313B}
+.pc.rare{background:#EAF0FF;border-color:#5B7BEA}
+.pc.rare i,.pc.rare .gl{color:#1F3FB0}
+.pc.legendary{background:#FFF3DA;border-color:#C7891A;box-shadow:0 0 0 2px #FFE2A6,0 6px 18px rgba(199,137,26,.35)}
+.pc.legendary i,.pc.legendary .gl{color:#7A4F00}
+.pc.treat{background:#FFEFF3}
+.pc.treat.rare{background:#F4EDFF}
+.pc.treat.legendary{background:#FFF0E0}
+.pc.treat i{color:#8E2A4F}
+.pc.treat .gl{font-size:30px;color:#8E2A4F}
+.pc.treat.rare i,.pc.treat.rare .gl{color:#5B2BA8}
+.pc.treat.legendary i,.pc.treat.legendary .gl{color:#7A4F00}
+.pc.on{transform:translateY(-6px);outline:3px solid #1B1F27;outline-offset:2px}
+.pc.big{flex:none;width:100%;height:auto;min-height:200px;gap:8px;cursor:default}
+.pc.big .gl{font-size:44px}
+.pc.big b{font-size:18px}
+.pc.ghost{background:#E9EBEF;border-style:dashed;border-color:#B5BBC6;box-shadow:none}
+.pc.ghost .gl,.pc.ghost b{color:#8E95A2}
+.cgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.colgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.colgrid .pc{flex:none;width:100%;height:128px;cursor:default}
+.colgrid .pc .gl{font-size:26px}
+.colgrid .pc b{font-size:13px}
+.revealbox{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;padding:0 48px;box-sizing:border-box}
+.revealcard{width:230px;min-height:310px;animation:flipin .65s ease-out}
+.revealcard .gl{font-size:64px}
+@keyframes flipin{0%{transform:perspective(800px) rotateY(90deg) scale(.7);opacity:0}60%{transform:perspective(800px) rotateY(-12deg) scale(1.04);opacity:1}100%{transform:perspective(800px) rotateY(0) scale(1)}}
+.overlay.center{align-items:center;justify-content:center}
+.raretag{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:24px;font-weight:800;color:#FFFFFF;text-align:center}
+.notice{background:#FFFFFF;border:2px solid #1B1F27;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.tlink{font:inherit;background:none;border:0;padding:2px 0;text-align:left;font-size:17px;font-weight:700;color:#1B1F27;cursor:pointer;text-decoration:underline;text-decoration-color:#C9CED8;text-decoration-thickness:2px;text-underline-offset:4px}
+.tlink.sm{font-size:14px;font-weight:500;color:#3A4150}
+.cm{background:#F1F3F6;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;max-width:85%;align-self:flex-start}
+.cm.mine{background:#DCE6FF;align-self:flex-end}
+.nt{font:inherit;text-align:left;background:#FFFFFF;border:0;border-radius:16px;padding:14px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;color:#1B1F27;width:100%;box-sizing:border-box}
+.nt .ndot{width:10px;height:10px;border-radius:5px;background:transparent;flex:none;margin-top:6px}
+.nt.unread{box-shadow:0 0 0 2px #C9D6FF}
+.nt.unread .ndot{background:#2F5BEA}
+.filters{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px}
+.filters .cbtn{flex:none}
+.sel{font:inherit;font-size:14px;min-height:40px;padding:0 10px;border-radius:12px;border:2px solid #D3D8E1;background:#FFFFFF;color:#1B1F27}
+.playbar{background:#1B1F27;color:#FFFFFF;border-radius:14px;padding:10px 10px 10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px}
+.thumb{width:56px;height:56px;border-radius:12px;object-fit:cover;flex:none;background:#E3E7EE}
+.ph{border-radius:12px;background:#E3E7EE;color:#6B7280;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:700;aspect-ratio:1/1;overflow:hidden;position:relative}
+.ph img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.ph em{position:absolute;left:6px;top:6px;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;background:rgba(27,31,39,.8);color:#FFFFFF;padding:2px 6px;border-radius:6px;z-index:1}
+.photolbl{cursor:pointer}
+.hidefile{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.plan{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:78px;gap:4px;background:#1B1F27;padding:4px;border-radius:14px}
+.room{position:relative;background:#F6F7F9;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:8px}
+.room .rf{position:absolute;left:0;right:0;bottom:0;background:#9ED4B4}
+.room b{position:relative;font-size:13px}
+.room span{position:relative;font-size:11px;color:#2C313B}
+.badges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ach{border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:4px;background:#F1F3F6;color:#6B7280}
+.ach b{font-size:14px}
+.ach span{font-size:12px;line-height:1.3}
+.ach.got{background:#FFE7CF;color:#5E2A06}
+.trophy{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.overlay{position:absolute;inset:0;background:rgba(27,31,39,.55);display:flex;align-items:flex-end;z-index:20}
+.sheet{background:#FFFFFF;width:100%;border-radius:24px 24px 0 0;padding:20px 16px 32px;display:flex;flex-direction:column;gap:14px;max-height:88%;overflow-y:auto;box-sizing:border-box}
+.stat{background:#F1F3F6;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:24px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+</style>
+
+<style>
+html,body{margin:0;background:#D9DDE3}
+#root{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 0;box-sizing:border-box}
+.dc-root{border-radius:36px;overflow:hidden;box-shadow:0 20px 60px rgba(27,31,39,.25)}
+@media (max-width:480px){
+  #root{padding:0;display:block}
+  .dc-root{border-radius:0;box-shadow:none}
+  .app{width:100vw !important;height:100vh !important;height:100dvh !important}
+}
+</style>
+
+<style>
+/* ---- Login gate ---- */
+.hqlogin{position:fixed;inset:0;z-index:100;background:linear-gradient(160deg,#2F5BEA,#1B2E7A);display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;font-family:'DM Sans',system-ui,sans-serif}
+.hqlogin[hidden]{display:none}
+.hqlogin-card{background:#fff;border-radius:24px;padding:26px 22px 24px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:14px;box-shadow:0 24px 60px rgba(13,22,70,.4)}
+.hqlogo{width:64px;height:64px;align-self:center}
+.hqtitle{font-size:28px;font-weight:800;text-align:center;color:#1B1F27}
+.hqsub{margin:0;text-align:center;color:#565D6C;font-size:14px;line-height:1.4}
+.hqwho{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hqwhobtn{font:inherit;font-weight:700;font-size:16px;min-height:52px;border-radius:14px;border:2px solid #D3D8E1;background:#fff;color:#1B1F27;cursor:pointer}
+.hqwhobtn.on{border-color:#2F5BEA;background:#EEF3FF;color:#1F3FB0}
+.hqhint{margin:0;font-size:12px;color:#8A8F9A;text-align:center}
+.hqerr{margin:0;color:#B8520F;font-size:14px;font-weight:600;text-align:center;min-height:18px}
+
+/* ---- Dark theme (resolved to an explicit data-theme by app.js) ---- */
+:root[data-theme="dark"] html,:root[data-theme="dark"] body{background:#0d0f14}
+:root[data-theme="dark"] .app{background:#14161b;color:#eceef2}
+:root[data-theme="dark"] .card{background:#1f232b;box-shadow:0 1px 0 rgba(0,0,0,.4)}
+:root[data-theme="dark"] .card.target{box-shadow:0 0 0 3px #E08A45}
+:root[data-theme="dark"] .lbl{color:#9aa3b2}
+:root[data-theme="dark"] .mini,:root[data-theme="dark"] .fbtn span{color:#9aa3b2}
+:root[data-theme="dark"] .inp,:root[data-theme="dark"] .vbtn,:root[data-theme="dark"] .cbtn,:root[data-theme="dark"] .fbtn,:root[data-theme="dark"] .sel{background:#262b34;border-color:#39414e;color:#eceef2}
+:root[data-theme="dark"] .fbtn.on{background:#1b2740;border-color:#2F5BEA}
+:root[data-theme="dark"] .cbtn.on{background:#eceef2;border-color:#eceef2;color:#14161b}
+:root[data-theme="dark"] .vbtn.on{background:#2F5BEA;border-color:#2F5BEA;color:#fff}
+:root[data-theme="dark"] .chip{background:#2a2f39;color:#c7cedb}
+:root[data-theme="dark"] .btn{background:#2a2f39;color:#eceef2}
+:root[data-theme="dark"] .btn.pri{background:#2F5BEA;color:#fff}
+:root[data-theme="dark"] .btn.warm{background:#B8520F;color:#fff}
+:root[data-theme="dark"] .btn.ghost{background:transparent;color:#aeb6c4}
+:root[data-theme="dark"] .iconbtn{color:#eceef2}
+:root[data-theme="dark"] .iconbtn.on{background:#2a2f39}
+:root[data-theme="dark"] .tabs{background:#1f232b;border-top-color:#2a2f39}
+:root[data-theme="dark"] .tab{color:#8b93a2}
+:root[data-theme="dark"] .tab.on{color:#7C9BFF}
+:root[data-theme="dark"] .seg{background:#2a2f39}
+:root[data-theme="dark"] .sbtn{color:#c7cedb}
+:root[data-theme="dark"] .sbtn.on{background:#14161b;color:#eceef2}
+:root[data-theme="dark"] .divider{background:#2a2f39}
+:root[data-theme="dark"] .meter{background:#343a47}
+:root[data-theme="dark"] .cm{background:#262b34}
+:root[data-theme="dark"] .cm.mine{background:#1b2740}
+:root[data-theme="dark"] .ph{background:#2a2f39;color:#9aa3b2}
+:root[data-theme="dark"] .nt{background:#1f232b;color:#eceef2}
+:root[data-theme="dark"] .notice{background:#1f232b;border-color:#eceef2}
+:root[data-theme="dark"] .tlink{color:#eceef2;text-decoration-color:#39414e}
+:root[data-theme="dark"] .stat,:root[data-theme="dark"] .ach{background:#262b34}
+:root[data-theme="dark"] .room{background:#262b34}
+:root[data-theme="dark"] .sheet{background:#1f232b;color:#eceef2}
+:root[data-theme="dark"] .pc{background:#262b34;border-color:#39414e;color:#eceef2}
+:root[data-theme="dark"] .pc .gl,:root[data-theme="dark"] .pc i{color:#9aa3b2}
+:root[data-theme="dark"] .pc.ghost{background:#20242c}
+:root[data-theme="dark"] a{color:#7C9BFF}
+</style>
+</head>
+<body>
+<div id="login" class="hqlogin">
+  <div class="hqlogin-card">
+    <img class="hqlogo" src="/house-quest/icons/house-quest-icon-square.svg" alt="House Quest">
+    <div class="disp hqtitle">House Quest</div>
+    <p class="hqsub">Plan, budget and build the house — together.</p>
+    <div class="field"><span class="flabel">Who are you?</span>
+      <div class="hqwho">
+        <button type="button" class="hqwhobtn" data-user="david">David</button>
+        <button type="button" class="hqwhobtn" data-user="anne">Anne</button>
+      </div>
+    </div>
+    <div class="field"><label for="hq-pass">Passcode</label>
+      <input id="hq-pass" class="inp" type="password" inputmode="numeric" placeholder="Your passcode" autocomplete="current-password">
+    </div>
+    <p class="hqhint">First time signing in? Whatever you type becomes your passcode.</p>
+    <button id="hq-login" class="btn pri full">Continue</button>
+    <p id="hq-err" class="hqerr" role="alert"></p>
+  </div>
+</div>
+<div id="root"></div>
+<template id="dc-template">
+<template id="dc-template">
+
+
+<div class="app">
+  <div class="row between" style="padding: 12px 8px 4px 16px; gap: 6px">
+    <div class="disp" style="font-size: 20px; font-weight: 800">House Quest</div>
+    <div class="row" style="gap: 4px">
+      <div class="seg" role="group" aria-label="Signed in">
+        <button class="sbtn on">{{me}}</button>
+        <button class="sbtn" onClick="{{signOut}}">Sign out</button>
+      </div>
+      <button class="{{bellCls}}" onClick="{{goInbox}}" aria-label="Notifications, {{unread}} unread" style="position: relative">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"></path><path d="M10 21h4"></path></svg>
+        <sc-if value="{{hasUnread}}" hint-placeholder-val="{{ true }}"><span class="badge" style="top: 2px; right: 2px">{{unread}}</span></sc-if>
+      </button>
+      <button class="{{gearCls}}" onClick="{{goSettings}}" aria-label="Settings">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg>
+      </button>
+    </div>
+  </div>
+
+  <sc-if value="{{playing}}" hint-placeholder-val="{{ false }}">
+    <div style="padding: 4px 16px 0">
+      <div class="playbar">
+        <span>{{playHint}}</span>
+        <button class="btn sm" onClick="{{cancelPlay}}">Cancel</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- BOARD -->
+  <sc-if value="{{isBoard}}" hint-placeholder-val="{{ true }}">
+    <div class="scroll">
+      <div class="card dark">
+        <div class="row between">
+          <span class="lbl">In-game balance</span>
+          <span class="mini" style="color: #A9B0BE">Next deposit {{nextDeposit}}</span>
+        </div>
+        <span class="disp" style="font-size: 44px; font-weight: 800; line-height: 1; color: {{balColor}}">{{balanceFmt}}</span>
+        <sc-if value="{{inRed}}" hint-placeholder-val="{{ false }}"><span class="chip later" style="align-self: flex-start">In the red until {{nextDepositDate}}</span></sc-if>
+        <div class="row between">
+          <span class="mini" style="color: #C3C8D2">Set aside {{reservedFmt}}</span>
+          <span style="font-size: 14px; font-weight: 700">Free to spend {{availableFmt}}</span>
+        </div>
+      </div>
+
+      <sc-if value="{{hasDrop}}" hint-placeholder-val="{{ true }}">
+        <div class="card drop">
+          <span class="lbl" style="color: #8A3E0B">Surprise cash drop</span>
+          <span style="font-size: 16px; font-weight: 500; line-height: 1.4">{{dropText}}</span>
+          <button class="btn warm full" onClick="{{claimDrop}}">Claim {{dropAmtFmt}}</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{drOpen}}" hint-placeholder-val="{{ true }}">
+        <div class="card" style="gap: 8px; box-shadow: 0 0 0 3px #2F5BEA">
+          <span class="lbl" style="color: #1F3FB0">This week's draft is open</span>
+          <span style="font-size: 16px; font-weight: 500; line-height: 1.4">{{drBanner}}</span>
+          <button class="btn pri full" onClick="{{goDraft}}">{{drCta}}</button>
+        </div>
+      </sc-if>
+
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div class="row between" style="padding: 0 2px">
+          <span class="lbl">{{me}}'s hand · {{handCount}}/{{maxHand}}</span>
+          <button class="btn ghost sm" onClick="{{goCards}}">All cards</button>
+        </div>
+        <div class="hand">
+          <sc-for list="{{hand}}" as="c" hint-placeholder-count="2">
+            <button class="{{c.cls}}" onClick="{{c.pick}}" aria-label="{{c.name}}: {{c.desc}}">
+              <i>{{c.rarity}}</i>
+              <span class="gl">{{c.glyph}}</span>
+              <b>{{c.name}}</b>
+            </button>
+          </sc-for>
+          <sc-if value="{{handEmpty}}" hint-placeholder-val="{{ false }}">
+            <span class="mini" style="padding: 8px 2px">No cards yet. Finish upgrades and level up to draw more.</span>
+          </sc-if>
+        </div>
+      </div>
+
+      <sc-if value="{{hasNotice}}" hint-placeholder-val="{{ false }}">
+        <div class="notice">
+          <span style="font-size: 15px; font-weight: 500; line-height: 1.4">{{noticeText}}</span>
+          <div class="row">
+            <sc-if value="{{canBlockNotice}}" hint-placeholder-val="{{ false }}">
+              <button class="btn warm sm" onClick="{{blockNotice}}">Block it</button>
+            </sc-if>
+            <button class="btn sm" onClick="{{dismissNotice}}">Fair enough</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <div class="card">
+        <div class="row between">
+          <span class="lbl">House level {{level}} · {{levelName}}</span>
+          <span class="mini">{{xp}} XP</span>
+        </div>
+        <div class="meter"><div class="fill xp" style="width: {{xpPct}}%"></div></div>
+        <span class="mini">{{xpToNext}} XP to level {{nextLevel}}. Level-ups draw a card for each of you.</span>
+      </div>
+
+      <div class="row between" style="padding: 6px 2px 0">
+        <span class="disp" style="font-size: 20px; font-weight: 800">Up next</span>
+        <span class="mini">It's {{season}} · in-season jobs get +3</span>
+      </div>
+      <div class="filters" role="group" aria-label="Filter upgrades">
+        <sc-for list="{{filters}}" as="f" hint-placeholder-count="6">
+          <button class="{{f.cls}}" onClick="{{f.pick}}">{{f.name}}</button>
+        </sc-for>
+      </div>
+      <div class="row between" style="margin-top: -4px">
+        <select class="sel" aria-label="Filter by room" value="{{roomFilter}}" onChange="{{setRoomFilter}}" data-opts="roomOpts"></select>
+        <span class="mini">Showing {{shownCount}} of {{queueTotal}}</span>
+      </div>
+
+      <sc-for list="{{queue}}" as="it" hint-placeholder-count="3">
+        <div class="{{it.cardCls}}">
+          <div class="row between" style="align-items: flex-start">
+            <div class="row" style="align-items: flex-start; gap: 12px">
+              <sc-if value="{{it.hasBefore}}" hint-placeholder-val="{{ false }}">
+                <img class="thumb" src="{{it.beforePhoto}}" alt="Before photo of {{it.title}}">
+              </sc-if>
+              <div class="col">
+                <span class="mini">{{it.cat}} · {{it.fundLabel}}</span>
+                <button class="tlink" onClick="{{it.open}}">{{it.title}}</button>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px">
+              <span class="disp" style="font-size: 18px; font-weight: 800">{{it.costFmt}}</span>
+              <span class="chip">{{it.effortLabel}}</span>
+            </div>
+          </div>
+          <div class="row wrap">
+            <span class="chip">{{it.whoLabel}}</span>
+            <sc-if value="{{it.planned}}" hint-placeholder-val="{{ false }}"><span class="chip ready">In the plan</span></sc-if>
+            <sc-if value="{{it.inSeason}}" hint-placeholder-val="{{ false }}"><span class="chip season">In season +3</span></sc-if>
+            <sc-if value="{{it.hasLink}}" hint-placeholder-val="{{ false }}"><a class="chip link" href="{{it.link}}" target="_blank" rel="noopener">View item ↗</a></sc-if>
+            <sc-for list="{{it.plays}}" as="p" hint-placeholder-count="1">
+              <span class="chip boost">{{p.label}}</span>
+            </sc-for>
+          </div>
+          <div class="row between">
+            <div class="imp"><span>David <b>{{it.d}}</b></span><span>Anne <b>{{it.a}}</b></span><span>Score <b>{{it.score}}</b></span></div>
+            <span class="{{it.fitCls}}">{{it.fitLabel}}</span>
+          </div>
+
+          <sc-if value="{{it.isLump}}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <div class="row between"><span class="mini">Saved {{it.savedFmt}} of {{it.costFmt}}</span><span class="mini">{{it.savePct}}%</span></div>
+              <div class="meter"><div class="fill save" style="width: {{it.savePct}}%"></div></div>
+            </div>
+            <div class="row">
+              <button class="btn" style="flex: 1" onClick="{{it.setAside}}">Set aside $100</button>
+              <button class="btn pri" style="flex: 1" onClick="{{it.startFinish}}">{{it.buyLabel}}</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{it.isGradual}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <div class="row between"><span class="mini">{{it.piecesDone}} of {{it.pieces}} {{it.unit}} done</span><span class="mini">{{it.perFmt}} each</span></div>
+              <div class="meter"><div class="fill" style="width: {{it.piecePct}}%"></div></div>
+            </div>
+            <button class="btn pri full" onClick="{{it.doPiece}}">Do 1 more · {{it.perFmt}}</button>
+          </sc-if>
+
+          <div class="row between">
+            <button class="btn ghost sm" onClick="{{it.shelve}}">Shelve</button>
+            <sc-if value="{{it.canPlay}}" hint-placeholder-val="{{ false }}">
+              <button class="btn warm sm" onClick="{{it.play}}">{{it.playLabel}}</button>
+            </sc-if>
+          </div>
+        </div>
+      </sc-for>
+      <sc-if value="{{queueEmpty}}" hint-placeholder-val="{{ false }}">
+        <div class="card"><span class="mini">Nothing approved yet. Pitch an upgrade to get started.</span></div>
+      </sc-if>
+      <sc-if value="{{noMatch}}" hint-placeholder-val="{{ false }}">
+        <div class="card"><span class="mini">Nothing matches that filter.</span></div>
+      </sc-if>
+
+      <sc-if value="{{hasShelf}}" hint-placeholder-val="{{ false }}">
+        <span class="lbl" style="padding: 8px 2px 0">Shelf</span>
+        <div class="card" style="gap: 4px">
+          <sc-for list="{{shelf}}" as="it" hint-placeholder-count="1">
+            <div class="row between">
+              <button class="tlink sm" onClick="{{it.open}}">{{it.title}} · {{it.costFmt}}</button>
+              <sc-if value="{{it.canRevive}}" hint-placeholder-val="{{ false }}">
+                <button class="btn warm sm" onClick="{{it.revive}}">Play Second Chance</button>
+              </sc-if>
+              <sc-if value="{{it.plain}}" hint-placeholder-val="{{ true }}">
+                <button class="btn ghost sm" onClick="{{it.restore}}">Restore</button>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- PITCHES -->
+  <sc-if value="{{isPitches}}" hint-placeholder-val="{{ false }}">
+    <div class="scroll">
+      <div class="h2">Needs your vote</div>
+      <span class="mini" style="margin-top: -8px; padding: 0 2px">How important is this to you? Your partner's score stays hidden until you lock in.</span>
+      <sc-for list="{{toVote}}" as="it" hint-placeholder-count="1">
+        <div class="card">
+          <div class="row" style="align-items: flex-start; gap: 12px">
+            <sc-if value="{{it.hasBefore}}" hint-placeholder-val="{{ false }}">
+              <img class="thumb" src="{{it.beforePhoto}}" alt="Photo for {{it.title}}">
+            </sc-if>
+            <div class="col" style="flex: 1">
+              <span class="mini">{{it.by}} pitched · {{it.cat}}</span>
+              <button class="tlink" onClick="{{it.open}}">{{it.title}}</button>
+            </div>
+            <span class="disp" style="font-size: 18px; font-weight: 800">{{it.costFmt}}</span>
+          </div>
+          <div class="row wrap">
+            <span class="chip">{{it.fundLabel}}</span>
+            <span class="chip">{{it.effortLabel}}</span>
+            <span class="chip">{{it.whoLabel}}</span>
+            <sc-if value="{{it.hasSeason}}" hint-placeholder-val="{{ false }}"><span class="chip season">Best in {{it.season}}</span></sc-if>
+            <sc-if value="{{it.hasLink}}" hint-placeholder-val="{{ false }}"><a class="chip link" href="{{it.link}}" target="_blank" rel="noopener">View item ↗</a></sc-if>
+          </div>
+          <sc-if value="{{it.hasNote}}" hint-placeholder-val="{{ false }}">
+            <span class="mini" style="font-style: italic">"{{it.note}}"</span>
+          </sc-if>
+          <sc-if value="{{it.peeked}}" hint-placeholder-val="{{ false }}">
+            <span class="chip boost" style="align-self: flex-start">Peek: {{other}} rated it {{it.partnerVote}}</span>
+          </sc-if>
+          <sc-if value="{{it.canPeek}}" hint-placeholder-val="{{ false }}">
+            <button class="btn warm sm" onClick="{{it.peek}}">Play Peek here</button>
+          </sc-if>
+          <div class="row between"><span class="mini">Not a big deal</span><span class="mini">Must have</span></div>
+          <div class="vote">
+            <sc-for list="{{it.votes}}" as="v" hint-placeholder-count="5">
+              <button class="{{v.cls}}" onClick="{{v.pick}}" aria-label="Importance {{v.n}}">{{v.n}}</button>
+            </sc-for>
+          </div>
+          <div class="row">
+            <button class="btn pri" style="flex: 1" onClick="{{it.lockIn}}">Lock in vote</button>
+            <button class="btn" onClick="{{it.pass}}">Pass</button>
+          </div>
+        </div>
+      </sc-for>
+      <sc-if value="{{noVotes}}" hint-placeholder-val="{{ false }}">
+        <div class="card"><span class="mini">You're all caught up.</span></div>
+      </sc-if>
+
+      <span class="lbl" style="padding: 10px 2px 0">Waiting on {{other}}</span>
+      <sc-for list="{{waiting}}" as="it" hint-placeholder-count="1">
+        <div class="card" style="flex-direction: row; justify-content: space-between; align-items: center">
+          <div class="col" style="gap: 2px">
+            <button class="tlink" style="font-size: 15px" onClick="{{it.open}}">{{it.title}}</button>
+            <span class="mini">{{it.cat}} · {{it.costFmt}} · you said {{it.mine}}</span>
+          </div>
+          <sc-if value="{{it.canOverride}}" hint-placeholder-val="{{ false }}">
+            <button class="btn warm sm" onClick="{{it.override}}">Play here</button>
+          </sc-if>
+          <sc-if value="{{it.noOverride}}" hint-placeholder-val="{{ true }}">
+            <button class="btn ghost sm" onClick="{{it.withdraw}}">Withdraw</button>
+          </sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{noWaiting}}" hint-placeholder-val="{{ false }}">
+        <span class="mini" style="padding: 0 2px">Nothing pending with {{other}}.</span>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- ADD -->
+  <sc-if value="{{isAdd}}" hint-placeholder-val="{{ false }}">
+    <div class="scroll">
+      <div class="h2">Pitch an upgrade</div>
+      <div class="card" style="gap: 16px">
+        <div class="field">
+          <label for="f-title">What's the upgrade?</label>
+          <input id="f-title" class="inp" placeholder="e.g. Ceiling fan in office" value="{{fTitle}}" onChange="{{setTitle}}">
+        </div>
+        <div class="row" style="align-items: center; gap: 12px">
+          <sc-if value="{{fHasPhoto}}" hint-placeholder-val="{{ false }}">
+            <img class="thumb" src="{{fPhoto}}" alt="Before photo">
+          </sc-if>
+          <label class="btn sm photolbl">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+            {{fPhotoLabel}}
+            <input class="hidefile" type="file" accept="image/*" onChange="{{setFPhoto}}">
+          </label>
+        </div>
+        <div class="field">
+          <span class="flabel">How does it get paid for?</span>
+          <div class="fund">
+            <button class="{{fundLumpCls}}" onClick="{{pickLump}}"><b>All at once</b><span>Save up, then buy. A couch, an appliance.</span></button>
+            <button class="{{fundGradCls}}" onClick="{{pickGrad}}"><b>Bit by bit</b><span>Do a piece whenever there's money. Light switches, plants.</span></button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-cost">Total estimated cost ($, 0 is fine)</label>
+          <input id="f-cost" class="inp" inputmode="decimal" placeholder="0" value="{{fCost}}" onChange="{{setCost}}">
+        </div>
+        <sc-if value="{{fIsGrad}}" hint-placeholder-val="{{ false }}">
+          <div class="row" style="align-items: flex-end">
+            <div class="field" style="flex: 0 0 100px">
+              <label for="f-pieces">How many</label>
+              <input id="f-pieces" class="inp" inputmode="numeric" value="{{fPieces}}" onChange="{{setPieces}}">
+            </div>
+            <div class="field" style="flex: 1">
+              <label for="f-unit">Of what</label>
+              <input id="f-unit" class="inp" placeholder="switches" value="{{fUnit}}" onChange="{{setUnit}}">
+            </div>
+          </div>
+          <span class="mini">About {{fPerFmt}} per piece</span>
+        </sc-if>
+        <div class="field">
+          <label for="f-link">Product link (optional)</label>
+          <input id="f-link" class="inp" inputmode="url" placeholder="Paste the exact one you mean" value="{{fLink}}" onChange="{{setLink}}">
+        </div>
+        <div class="field">
+          <span class="flabel">How much work is it?</span>
+          <div class="vote v3">
+            <sc-for list="{{effortOpts}}" as="e" hint-placeholder-count="3">
+              <button class="{{e.cls}}" onClick="{{e.pick}}">{{e.name}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div class="field">
+          <span class="flabel">Who's doing it?</span>
+          <div class="vote v4">
+            <sc-for list="{{whoOpts}}" as="e" hint-placeholder-count="4">
+              <button class="{{e.cls}}" onClick="{{e.pick}}">{{e.name}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div class="field">
+          <span class="flabel">Best time of year</span>
+          <div class="catgrid">
+            <sc-for list="{{seasonOpts}}" as="c" hint-placeholder-count="5">
+              <button class="{{c.cls}}" onClick="{{c.pick}}">{{c.name}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div class="field">
+          <span class="flabel">Category</span>
+          <div class="catgrid">
+            <sc-for list="{{cats}}" as="c" hint-placeholder-count="8">
+              <button class="{{c.cls}}" onClick="{{c.pick}}">{{c.name}}</button>
+            </sc-for>
+          </div>
+          <div class="row" style="margin-top: 4px">
+            <input class="inp" aria-label="New category" placeholder="New category" value="{{fNewCat}}" onChange="{{setNewCat}}">
+            <button class="btn" onClick="{{addCat}}">Add</button>
+          </div>
+        </div>
+        <div class="field">
+          <span class="flabel">How important is it to you?</span>
+          <div class="vote">
+            <sc-for list="{{myVote}}" as="v" hint-placeholder-count="5">
+              <button class="{{v.cls}}" onClick="{{v.pick}}" aria-label="Importance {{v.n}}">{{v.n}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-note">Sell it (optional)</label>
+          <input id="f-note" class="inp" placeholder="Why it matters" value="{{fNote}}" onChange="{{setNote}}">
+        </div>
+        <button class="btn pri full" onClick="{{submit}}">Send to {{other}}</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- TROPHIES -->
+  <sc-if value="{{isTrophies}}" hint-placeholder-val="{{ false }}">
+    <div class="scroll">
+      <div class="h2">Trophies</div>
+
+      <button class="btn warm full" onClick="{{openRecap}}">See this week's wrap-up</button>
+
+      <span class="lbl" style="padding: 4px 2px 0">The house</span>
+      <div class="plan" role="img" aria-label="Floor plan showing progress by room">
+        <sc-for list="{{rooms}}" as="r" hint-placeholder-count="9">
+          <div class="room" style="grid-column: span {{r.span}}">
+            <div class="rf" style="height: {{r.pct}}%"></div>
+            <b>{{r.name}}</b>
+            <span>{{r.label}}</span>
+          </div>
+        </sc-for>
+      </div>
+      <span class="mini" style="padding: 0 2px; margin-top: -6px">Rooms fill in as you finish upgrades in them.</span>
+
+      <div class="row between" style="padding: 8px 2px 0">
+        <span class="lbl">Achievements</span>
+        <span class="mini">{{achGot}} of {{achTotal}}</span>
+      </div>
+      <div class="badges">
+        <sc-for list="{{achievements}}" as="a" hint-placeholder-count="8">
+          <div class="{{a.cls}}">
+            <b>{{a.name}}</b>
+            <span>{{a.desc}}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <span class="lbl" style="padding: 8px 2px 0">Estimating skills</span>
+      <div class="card">
+        <div class="row between">
+          <span style="font-weight: 700">{{estHeadline}}</span>
+          <span class="{{estCls}}">{{estDiffFmt}}</span>
+        </div>
+        <span class="mini">Estimated {{estTotalFmt}}, actually spent {{actTotalFmt}} across {{estCount}} finished jobs. Coming in under refunds the difference as a bonus.</span>
+      </div>
+
+      <span class="lbl" style="padding: 8px 2px 0">Trophy wall</span>
+      <sc-for list="{{trophies}}" as="t" hint-placeholder-count="2">
+        <div class="card">
+          <div class="row between">
+            <div class="col" style="gap: 2px">
+              <button class="tlink" style="font-size: 15px" onClick="{{t.open}}">{{t.title}}</button>
+              <span class="mini">{{t.doneMonth}} · {{t.whoLabel}} · {{t.actualFmt}}</span>
+            </div>
+            <span class="{{t.diffCls}}">{{t.diffFmt}}</span>
+          </div>
+          <div class="trophy">
+            <label class="ph photolbl">
+              <em>Before</em>
+              <sc-if value="{{t.hasBefore}}" hint-placeholder-val="{{ false }}"><img src="{{t.beforePhoto}}" alt="Before"></sc-if>
+              <sc-if value="{{t.noBefore}}" hint-placeholder-val="{{ true }}"><span>+ Add photo</span></sc-if>
+              <input class="hidefile" type="file" accept="image/*" onChange="{{t.setBefore}}">
+            </label>
+            <label class="ph photolbl">
+              <em>After</em>
+              <sc-if value="{{t.hasAfter}}" hint-placeholder-val="{{ false }}"><img src="{{t.afterPhoto}}" alt="After"></sc-if>
+              <sc-if value="{{t.noAfter}}" hint-placeholder-val="{{ true }}"><span>+ Add photo</span></sc-if>
+              <input class="hidefile" type="file" accept="image/*" onChange="{{t.setAfter}}">
+            </label>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <!-- EVENTS -->
+  <sc-if value="{{isEvent}}" hint-placeholder-val="{{ false }}">
+    <div class="scroll">
+      <div class="h2">Events</div>
+
+      <div class="card">
+        <span class="lbl">Power cards</span>
+        <span class="mini">{{deckSize}} cards, power cards plus real-life treats, across common, rare and legendary. You draw one when you finish an upgrade, and both of you draw on level-ups and holidays.</span>
+        <button class="btn sm" onClick="{{goCards}}">Open card collection</button>
+      </div>
+
+      <sc-if value="{{dropsOn}}" hint-placeholder-val="{{ true }}">
+        <div class="card">
+          <div class="row between">
+            <span class="lbl">Surprise cash drops</span>
+            <span class="chip">{{dropsUsed}} of {{dropsPerMonth}} this month</span>
+          </div>
+          <span class="mini">Random $20–$50 drops show up on the Board through the month.</span>
+          <sc-for list="{{dropLog}}" as="d" hint-placeholder-count="1">
+            <div class="row between" style="align-items: flex-start"><span style="font-size: 14px; line-height: 1.4">{{d.text}}</span><span class="pos">{{d.amtFmt}}</span></div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{holidaysOn}}" hint-placeholder-val="{{ true }}">
+        <span class="lbl" style="padding: 8px 2px 0">Holiday events</span>
+        <sc-for list="{{holidays}}" as="h" hint-placeholder-count="4">
+          <div class="card">
+            <div class="holi">
+              <div class="hdate"><span>{{h.mon}}</span><b>{{h.day}}</b></div>
+              <div class="col" style="gap: 2px; flex: 1">
+                <span style="font-weight: 700">{{h.title}}</span>
+                <span class="mini">{{h.body}} Plus a card each.</span>
+              </div>
+              <span class="pos">{{h.amtFmt}}</span>
+            </div>
+            <sc-if value="{{h.open}}" hint-placeholder-val="{{ true }}">
+              <span class="mini">{{h.away}}</span>
+            </sc-if>
+            <sc-if value="{{h.claimed}}" hint-placeholder-val="{{ false }}">
+              <span class="mini">Claimed · {{h.result}}</span>
+            </sc-if>
+          </div>
+        </sc-for>
+      </sc-if>
+
+      <span class="lbl" style="padding: 8px 2px 0">Weekly wildcard</span>
+      <div class="card" style="gap: 14px">
+        <div class="die">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"></rect><circle cx="8" cy="8" r="1.2" fill="currentColor"></circle><circle cx="16" cy="16" r="1.2" fill="currentColor"></circle><circle cx="12" cy="12" r="1.2" fill="currentColor"></circle><circle cx="16" cy="8" r="1.2" fill="currentColor"></circle><circle cx="8" cy="16" r="1.2" fill="currentColor"></circle></svg>
+        </div>
+        <sc-if value="{{hasEvent}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 6px; text-align: center">
+            <span class="disp" style="font-size: 22px; font-weight: 800">{{eventTitle}}</span>
+            <span class="mini" style="font-size: 15px">{{eventBody}}</span>
+            <span class="disp" style="font-size: 26px; font-weight: 800; color: {{eventColor}}">{{eventDeltaFmt}}</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{noEvent}}" hint-placeholder-val="{{ true }}">
+          <span class="mini" style="text-align: center">One roll per week. Could help, could hurt.</span>
+          <button class="btn warm full" onClick="{{roll}}">Roll the dice</button>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- SETTINGS -->
+  <sc-if value="{{isSettings}}" hint-placeholder-val="{{ false }}">
+    <div class="scroll">
+      <div class="h2">Settings</div>
+
+      <div class="card dark">
+        <span class="lbl">In-game balance</span>
+        <span class="disp" style="font-size: 40px; font-weight: 800; line-height: 1">{{balanceFmt}}</span>
+        <span class="mini" style="color: #C3C8D2">Set aside {{reservedFmt}} · Free {{availableFmt}}</span>
+      </div>
+
+      <div class="card" style="gap: 14px">
+        <span class="lbl">Budget</span>
+        <div class="field">
+          <label for="s-budget">Weekly budget ($)</label>
+          <input id="s-budget" class="inp" inputmode="numeric" value="{{sBudget}}" onChange="{{setBudget}}">
+        </div>
+        <div class="field">
+          <label for="s-day">Deposit day</label>
+          <select id="s-day" class="inp" value="{{depositDay}}" onChange="{{setDay}}" data-opts="dayOpts"></select>
+        </div>
+        <div class="setrow">
+          <div class="col" style="gap: 2px">
+            <span style="font-weight: 700">Roll over unspent money</span>
+            <span class="mini">Off = balance resets to the budget each week</span>
+          </div>
+          <button class="{{rolloverCls}}" onClick="{{toggleRollover}}" aria-pressed="{{rolloverOn}}" aria-label="Roll over unspent money"></button>
+        </div>
+      </div>
+
+      <div class="card" style="gap: 10px">
+        <span class="lbl">Fun stuff</span>
+        <div class="setrow">
+          <div class="col" style="gap: 2px">
+            <span style="font-weight: 700">Surprise cash drops</span>
+            <span class="mini">Random $20–$50 with a ridiculous reason</span>
+          </div>
+          <button class="{{dropsCls}}" onClick="{{toggleDrops}}" aria-pressed="{{dropsOn}}" aria-label="Surprise cash drops"></button>
+        </div>
+        <sc-if value="{{dropsOn}}" hint-placeholder-val="{{ true }}">
+          <div class="row between">
+            <span class="mini">Drops per month</span>
+            <div class="seg" role="group" aria-label="Drops per month">
+              <sc-for list="{{freqOpts}}" as="f" hint-placeholder-count="3">
+                <button class="{{f.cls}}" onClick="{{f.pick}}">{{f.n}}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <div class="divider"></div>
+        <div class="setrow">
+          <div class="col" style="gap: 2px">
+            <span style="font-weight: 700">Holiday events</span>
+            <span class="mini">Bonuses on holidays</span>
+          </div>
+          <button class="{{holidaysCls}}" onClick="{{toggleHolidays}}" aria-pressed="{{holidaysOn}}" aria-label="Holiday events"></button>
+        </div>
+        <div class="divider"></div>
+        <div class="setrow">
+          <div class="col" style="gap: 2px">
+            <span style="font-weight: 700">Weekly wildcard</span>
+            <span class="mini">One dice roll per week</span>
+          </div>
+          <button class="{{wildCls}}" onClick="{{toggleWild}}" aria-pressed="{{wildOn}}" aria-label="Monthly wildcard"></button>
+        </div>
+        <div class="divider"></div>
+        <div class="setrow">
+          <div class="col" style="gap: 2px">
+            <span style="font-weight: 700">Seasonal boost</span>
+            <span class="mini">+3 score for jobs in their best season</span>
+          </div>
+          <button class="{{seasonCls}}" onClick="{{toggleSeason}}" aria-pressed="{{seasonOn}}" aria-label="Seasonal boost"></button>
+        </div>
+        <div class="divider"></div>
+        <div class="setrow">
+          <div class="col" style="gap: 2px">
+            <span style="font-weight: 700">Dark mode</span>
+            <span class="mini">Easier on the eyes at night</span>
+          </div>
+          <button class="{{themeCls}}" onClick="{{toggleTheme}}" aria-pressed="{{themeOn}}" aria-label="Dark mode"></button>
+        </div>
+        <div class="divider"></div>
+        <div class="setrow">
+          <div class="col" style="gap: 2px">
+            <span style="font-weight: 700">Power cards</span>
+            <span class="mini">Max cards in a hand</span>
+          </div>
+          <div class="seg" role="group" aria-label="Max hand size">
+            <sc-for list="{{handOpts}}" as="f" hint-placeholder-count="3">
+              <button class="{{f.cls}}" onClick="{{f.pick}}">{{f.n}}</button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="gap: 10px">
+        <span class="lbl">Treat cards</span>
+        <div class="setrow">
+          <div class="col" style="gap: 2px">
+            <span style="font-weight: 700">Treats in the deck</span>
+            <span class="mini">Real-life rewards like a charcuterie night or a bottle of wine</span>
+          </div>
+          <button class="{{treatsCls}}" onClick="{{toggleTreats}}" aria-pressed="{{treatsOn}}" aria-label="Treats in the deck"></button>
+        </div>
+        <div class="divider"></div>
+        <span style="font-weight: 700">Make your own</span>
+        <div class="field"><label for="ct-name">Treat</label><input id="ct-name" class="inp" placeholder="e.g. Pizza and a puzzle" value="{{ctName}}" onChange="{{setCtName}}"></div>
+        <div class="row">
+          <div class="field" style="flex: 0 0 110px"><label for="ct-glyph">Card word</label><input id="ct-glyph" class="inp" placeholder="Pizza" maxlength="5" value="{{ctGlyph}}" onChange="{{setCtGlyph}}"></div>
+          <div class="field" style="flex: 1"><label for="ct-desc">Description</label><input id="ct-desc" class="inp" placeholder="What it means" value="{{ctDesc}}" onChange="{{setCtDesc}}"></div>
+        </div>
+        <div class="field"><label for="ct-value">Worth if you skip it ($)</label><input id="ct-value" class="inp" inputmode="numeric" placeholder="25" value="{{ctValue}}" onChange="{{setCtValue}}"></div>
+        <div class="row between">
+          <span class="mini">How rare?</span>
+          <div class="seg" role="group" aria-label="Rarity">
+            <sc-for list="{{ctRarityOpts}}" as="r" hint-placeholder-count="3"><button class="{{r.cls}}" onClick="{{r.pick}}">{{r.name}}</button></sc-for>
+          </div>
+        </div>
+        <button class="btn full" onClick="{{addTreat}}">Add treat to the deck</button>
+        <sc-if value="{{hasCustom}}" hint-placeholder-val="{{ false }}">
+          <div class="divider"></div>
+          <sc-for list="{{customTreats}}" as="k" hint-placeholder-count="1">
+            <div class="row between">
+              <div class="col" style="gap: 2px"><span style="font-weight: 700">{{k.name}}</span><span class="mini">{{k.rarity}} · worth {{k.valueFmt}} · {{k.desc}}</span></div>
+              <button class="btn ghost sm" onClick="{{k.remove}}">Remove</button>
+            </div>
+          </sc-for>
+        </sc-if>
+      </div>
+
+      <div class="card" style="gap: 10px">
+        <span class="lbl">{{me}}'s notifications</span>
+        <span class="mini">What pings your phone. Everything still lands in the inbox.</span>
+        <sc-for list="{{notifPrefs}}" as="np" hint-placeholder-count="8">
+          <div class="setrow">
+            <div class="col" style="gap: 2px">
+              <span style="font-weight: 700">{{np.name}}</span>
+              <span class="mini">{{np.desc}}</span>
+            </div>
+            <button class="{{np.cls}}" onClick="{{np.toggle}}" aria-pressed="{{np.on}}" aria-label="{{np.name}}"></button>
+          </div>
+        </sc-for>
+        <div class="divider"></div>
+        <div class="setrow">
+          <div class="col" style="gap: 2px">
+            <span style="font-weight: 700">Quiet hours</span>
+            <span class="mini">Hold pushes from 10pm to 7am</span>
+          </div>
+          <button class="{{quietCls}}" onClick="{{toggleQuiet}}" aria-pressed="{{quietOn}}" aria-label="Quiet hours"></button>
+        </div>
+      </div>
+
+      <div class="card" style="gap: 10px">
+        <span class="lbl">Adjust balance</span>
+        <span class="mini">For real-life stuff: a gift card, a return, money you pulled out.</span>
+        <div class="row">
+          <input class="inp" style="flex: 0 0 110px" inputmode="decimal" aria-label="Amount" placeholder="+/- $" value="{{adjAmt}}" onChange="{{setAdjAmt}}">
+          <input class="inp" aria-label="Reason" placeholder="Reason" value="{{adjNote}}" onChange="{{setAdjNote}}">
+        </div>
+        <button class="btn full" onClick="{{addAdj}}">Add to ledger</button>
+      </div>
+
+      <div class="card" style="gap: 10px">
+        <span class="lbl">Ledger</span>
+        <sc-for list="{{ledger}}" as="l" hint-placeholder-count="4">
+          <div class="row between" style="align-items: flex-start">
+            <div class="col" style="gap: 2px">
+              <span style="font-size: 14px; font-weight: 500">{{l.label}}</span>
+              <span class="mini">{{l.date}}</span>
+            </div>
+            <span class="{{l.cls}}">{{l.amtFmt}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- DRAFT -->
+  <sc-if value="{{isDraft}}" hint-placeholder-val="{{ false }}">
+    <div class="scroll">
+      <div class="row between" style="padding: 6px 2px 0">
+        <span class="disp" style="font-size: 20px; font-weight: 800">This week's draft</span>
+        <button class="btn ghost sm" onClick="{{goBoard}}">Done</button>
+      </div>
+      <div class="card dark" style="gap: 8px">
+        <div class="row between">
+          <span class="lbl">Left to allocate</span>
+          <span class="mini" style="color: #A9B0BE">of {{drPoolFmt}}</span>
+        </div>
+        <span class="disp" style="font-size: 40px; font-weight: 800; line-height: 1">{{drLeftFmt}}</span>
+        <div class="meter"><div class="fill" style="width: {{drUsedPct}}%"></div></div>
+        <span style="font-size: 15px; font-weight: 700">{{drStatus}}</span>
+      </div>
+      <span class="mini" style="padding: 0 2px; line-height: 1.45">Take turns drafting upgrades in snake order. The higher an upgrade ranks, the more of its cost you can put toward it this week: #1 gets up to 100%, each spot down gets 15% less, bottoming out at 15%. Want something ranked low? Draft it anyway, it just gets less. Champion cards move things up.</span>
+
+      <sc-for list="{{drOptions}}" as="o" hint-placeholder-count="5">
+        <div class="card" style="gap: 8px">
+          <div class="row" style="gap: 12px; align-items: flex-start">
+            <span class="disp" style="font-size: 22px; font-weight: 800; min-width: 38px">#{{o.rank}}</span>
+            <div class="col" style="flex: 1">
+              <span style="font-weight: 700; font-size: 16px">{{o.title}}</span>
+              <span class="mini">Score {{o.score}} · costs {{o.costFmt}} · up to {{o.multPct}}% this week</span>
+            </div>
+          </div>
+          <sc-if value="{{o.picked}}" hint-placeholder-val="{{ false }}"><span class="chip ready" style="align-self: flex-start">{{o.pickedLabel}}</span></sc-if>
+          <sc-if value="{{o.canPick}}" hint-placeholder-val="{{ true }}"><button class="btn pri full" onClick="{{o.pick}}">Draft it · {{o.amtFmt}}</button></sc-if>
+          <sc-if value="{{o.showCap}}" hint-placeholder-val="{{ false }}"><span class="mini">Would get {{o.amtFmt}}</span></sc-if>
+        </div>
+      </sc-for>
+
+      <sc-if value="{{drCanPass}}" hint-placeholder-val="{{ true }}">
+        <button class="btn full" onClick="{{drPass}}">I'm done picking</button>
+      </sc-if>
+
+      <sc-if value="{{drShowPlan}}" hint-placeholder-val="{{ false }}">
+        <div class="card" style="gap: 10px">
+          <span class="lbl">The plan</span>
+          <sc-for list="{{drPicks}}" as="p" hint-placeholder-count="3">
+            <div class="row between"><span style="font-size: 15px">{{p.title}}</span><span class="mini">{{p.who}} · {{p.amtFmt}}</span></div>
+          </sc-for>
+          <div class="divider"></div>
+          <div class="row between"><span style="font-weight: 700">Total planned</span><span style="font-weight: 700">{{drPickedFmt}}</span></div>
+          <span class="mini">David: {{drLockD}} · Anne: {{drLockA}}</span>
+          <sc-if value="{{drCanLock}}" hint-placeholder-val="{{ true }}">
+            <button class="btn warm full" onClick="{{drLock}}">Lock it in</button>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- DETAIL -->
+  <sc-if value="{{isDetail}}" hint-placeholder-val="{{ false }}">
+    <div class="scroll">
+      <div class="row between">
+        <button class="btn ghost sm" onClick="{{closeDetail}}">‹ Back</button>
+        <sc-if value="{{dNotEditing}}" hint-placeholder-val="{{ true }}">
+          <button class="btn sm" onClick="{{startEdit}}">Edit</button>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{dNotEditing}}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{dHasPhoto}}" hint-placeholder-val="{{ false }}">
+          <img src="{{d.beforePhoto}}" alt="Before photo of {{d.title}}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 18px">
+        </sc-if>
+        <div class="card">
+          <div class="row between" style="align-items: flex-start">
+            <div class="col">
+              <span class="mini">{{d.cat}} · {{dStatus}}</span>
+              <span class="disp" style="font-size: 24px; font-weight: 800; line-height: 1.15">{{d.title}}</span>
+            </div>
+            <span class="disp" style="font-size: 22px; font-weight: 800">{{dCostFmt}}</span>
+          </div>
+          <div class="row wrap">
+            <span class="chip">{{dFund}}</span>
+            <span class="chip">{{dEffort}}</span>
+            <span class="chip">{{dWho}}</span>
+            <sc-if value="{{dHasSeason}}" hint-placeholder-val="{{ false }}"><span class="chip season">Best in {{d.season}}</span></sc-if>
+            <sc-if value="{{dHasLink}}" hint-placeholder-val="{{ false }}"><a class="chip link" href="{{d.link}}" target="_blank" rel="noopener">View item ↗</a></sc-if>
+            <sc-for list="{{dPlays}}" as="p" hint-placeholder-count="1"><span class="chip boost">{{p.label}}</span></sc-for>
+          </div>
+          <sc-if value="{{dHasNote}}" hint-placeholder-val="{{ false }}">
+            <span class="mini" style="font-style: italic">"{{d.note}}"</span>
+          </sc-if>
+          <div class="stats">
+            <div class="stat"><span class="mini">David's vote</span><b>{{dVoteD}}</b></div>
+            <div class="stat"><span class="mini">Anne's vote</span><b>{{dVoteA}}</b></div>
+          </div>
+          <sc-if value="{{dHasProgress}}" hint-placeholder-val="{{ false }}">
+            <div class="row between"><span class="mini">{{dProgressLabel}}</span><span class="mini">{{dProgressPct}}%</span></div>
+            <div class="meter"><div class="fill save" style="width: {{dProgressPct}}%"></div></div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{dEditing}}" hint-placeholder-val="{{ false }}">
+        <div class="card" style="gap: 14px">
+          <span class="lbl">Edit upgrade</span>
+          <div class="row" style="gap: 12px">
+            <sc-if value="{{dHasPhoto}}" hint-placeholder-val="{{ false }}"><img class="thumb" src="{{d.beforePhoto}}" alt="Before photo"></sc-if>
+            <label class="btn sm photolbl">Change photo<input class="hidefile" type="file" accept="image/*" onChange="{{setDPhoto}}"></label>
+          </div>
+          <div class="field"><label for="e-title">Name</label><input id="e-title" class="inp" value="{{eTitle}}" onChange="{{setETitle}}"></div>
+          <div class="field"><label for="e-cost">Estimated cost ($)</label><input id="e-cost" class="inp" inputmode="decimal" value="{{eCost}}" onChange="{{setECost}}"></div>
+          <div class="field"><label for="e-link">Product link</label><input id="e-link" class="inp" inputmode="url" value="{{eLink}}" onChange="{{setELink}}"></div>
+          <div class="field"><label for="e-note">Note</label><input id="e-note" class="inp" value="{{eNote}}" onChange="{{setENote}}"></div>
+          <div class="field">
+            <span class="flabel">How much work</span>
+            <div class="vote v3"><sc-for list="{{eEffortOpts}}" as="e" hint-placeholder-count="3"><button class="{{e.cls}}" onClick="{{e.pick}}">{{e.name}}</button></sc-for></div>
+          </div>
+          <div class="field">
+            <span class="flabel">Who's doing it</span>
+            <div class="vote v4"><sc-for list="{{eWhoOpts}}" as="e" hint-placeholder-count="4"><button class="{{e.cls}}" onClick="{{e.pick}}">{{e.name}}</button></sc-for></div>
+          </div>
+          <div class="field">
+            <span class="flabel">Best time of year</span>
+            <div class="catgrid"><sc-for list="{{eSeasonOpts}}" as="e" hint-placeholder-count="5"><button class="{{e.cls}}" onClick="{{e.pick}}">{{e.name}}</button></sc-for></div>
+          </div>
+          <div class="field">
+            <span class="flabel">Room</span>
+            <div class="catgrid"><sc-for list="{{eCatOpts}}" as="e" hint-placeholder-count="8"><button class="{{e.cls}}" onClick="{{e.pick}}">{{e.name}}</button></sc-for></div>
+          </div>
+          <div class="row">
+            <button class="btn" style="flex: 1" onClick="{{cancelEdit}}">Cancel</button>
+            <button class="btn pri" style="flex: 1" onClick="{{saveEdit}}">Save changes</button>
+          </div>
+          <span class="mini">{{other}} gets a heads-up about what changed.</span>
+        </div>
+      </sc-if>
+
+      <span class="lbl" style="padding: 4px 2px 0">Comments</span>
+      <div class="card" style="gap: 10px">
+        <sc-for list="{{dComments}}" as="c" hint-placeholder-count="2">
+          <div class="{{c.cls}}">
+            <span class="mini" style="font-weight: 700">{{c.who}} · {{c.time}}</span>
+            <span style="font-size: 15px; line-height: 1.4">{{c.text}}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{dNoComments}}" hint-placeholder-val="{{ false }}"><span class="mini">No comments yet. Make your case.</span></sc-if>
+        <div class="row">
+          <input class="inp" aria-label="Write a comment" placeholder="Say something…" value="{{cDraft}}" onChange="{{setCDraft}}">
+          <button class="btn pri" onClick="{{sendComment}}">Send</button>
+        </div>
+      </div>
+
+      <span class="lbl" style="padding: 4px 2px 0">History</span>
+      <div class="card" style="gap: 8px">
+        <sc-for list="{{dHistory}}" as="h" hint-placeholder-count="3">
+          <div class="row between" style="align-items: flex-start">
+            <span style="font-size: 14px; line-height: 1.4">{{h.text}}</span>
+            <span class="mini" style="flex: none">{{h.time}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- INBOX -->
+  <sc-if value="{{isInbox}}" hint-placeholder-val="{{ false }}">
+    <div class="scroll">
+      <div class="row between" style="padding: 6px 2px 0">
+        <span class="disp" style="font-size: 20px; font-weight: 800">Notifications</span>
+        <button class="btn ghost sm" onClick="{{markAllRead}}">Mark all read</button>
+      </div>
+      <sc-for list="{{inbox}}" as="n" hint-placeholder-count="4">
+        <button class="{{n.cls}}" onClick="{{n.go}}">
+          <span class="ndot"></span>
+          <span class="col" style="gap: 2px; flex: 1">
+            <span style="font-size: 15px; line-height: 1.4">{{n.text}}</span>
+            <span class="mini">{{n.time}} · {{n.catLabel}}</span>
+          </span>
+        </button>
+      </sc-for>
+      <sc-if value="{{noInbox}}" hint-placeholder-val="{{ false }}">
+        <div class="card"><span class="mini">Nothing yet.</span></div>
+      </sc-if>
+      <span class="mini" style="padding: 0 2px">Choose what pings your phone in Settings.</span>
+    </div>
+  </sc-if>
+
+  <!-- CARDS -->
+  <sc-if value="{{isCards}}" hint-placeholder-val="{{ false }}">
+    <div class="scroll">
+      <div class="row between" style="padding: 6px 2px 0">
+        <span class="disp" style="font-size: 20px; font-weight: 800">{{me}}'s cards</span>
+        <button class="btn ghost sm" onClick="{{goBoard}}">Done</button>
+      </div>
+      <div class="cgrid">
+        <sc-for list="{{hand}}" as="c" hint-placeholder-count="2">
+          <div class="{{c.bigCls}}">
+            <i>{{c.rarity}}</i>
+            <span class="gl">{{c.glyph}}</span>
+            <b>{{c.name}}</b>
+            <span class="ds">{{c.desc}}</span>
+            <sc-if value="{{c.isTreat}}" hint-placeholder-val="{{ false }}"><span class="chip" style="align-self: flex-start">{{c.valueLabel}}</span></sc-if>
+            <button class="btn sm" style="background: #1B1F27; color: #FFFFFF" onClick="{{c.use}}">{{c.useLabel}}</button>
+            <sc-if value="{{c.isTreat}}" hint-placeholder-val="{{ false }}">
+              <button class="btn sm" style="background: #FFFFFF; border: 2px solid #1B1F27" onClick="{{c.cashOut}}">{{c.cashLabel}}</button>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{handEmpty}}" hint-placeholder-val="{{ false }}">
+        <div class="card"><span class="mini">Your hand is empty. Finish an upgrade to draw.</span></div>
+      </sc-if>
+
+      <sc-if value="{{hasArmed}}" hint-placeholder-val="{{ false }}">
+        <span class="lbl" style="padding: 4px 2px 0">Armed</span>
+        <div class="card" style="gap: 6px">
+          <sc-for list="{{armed}}" as="a" hint-placeholder-count="1">
+            <div class="row between"><span style="font-weight: 700">{{a.name}}</span><span class="mini">{{a.desc}}</span></div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <span class="lbl" style="padding: 4px 2px 0">Card log</span>
+      <div class="card" style="gap: 8px">
+        <sc-for list="{{cardLog}}" as="l" hint-placeholder-count="2">
+          <span style="font-size: 14px; line-height: 1.4">{{l.text}}</span>
+        </sc-for>
+        <sc-if value="{{noLog}}" hint-placeholder-val="{{ false }}"><span class="mini">No cards played yet.</span></sc-if>
+      </div>
+
+      <div class="row between" style="padding: 4px 2px 0">
+        <span class="lbl">Collection</span>
+        <span class="mini">{{seenCount}} of {{deckSize}} discovered</span>
+      </div>
+      <div class="colgrid">
+        <sc-for list="{{collection}}" as="k" hint-placeholder-count="12">
+          <div class="{{k.cls}}">
+            <div class="row between"><i>{{k.rarity}}</i><i>{{k.count}}</i></div>
+            <span class="gl">{{k.glyph}}</span>
+            <b>{{k.name}}</b>
+          </div>
+        </sc-for>
+      </div>
+      <span class="mini" style="padding: 0 2px">Draw odds: 60% common · 30% rare · 10% legendary.</span>
+    </div>
+  </sc-if>
+
+  <!-- CARD REVEAL -->
+  <sc-if value="{{hasReveal}}" hint-placeholder-val="{{ false }}">
+    <div class="overlay center">
+      <div class="revealbox">
+        <span class="raretag">{{revealTag}}</span>
+        <div class="{{revealCls}}">
+          <i>{{revealRarity}}</i>
+          <span class="gl">{{revealGlyph}}</span>
+          <b>{{revealName}}</b>
+          <span class="ds">{{revealDesc}}</span>
+        </div>
+        <button class="btn pri full" onClick="{{closeReveal}}">Add to hand</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- FINISH SHEET -->
+  <sc-if value="{{finishing}}" hint-placeholder-val="{{ false }}">
+    <div class="overlay">
+      <div class="sheet" role="dialog" aria-label="Finish upgrade">
+        <div class="col" style="gap: 2px">
+          <span class="lbl">{{finLabel}}</span>
+          <span class="disp" style="font-size: 22px; font-weight: 800">{{finTitle}}</span>
+        </div>
+        <div class="field">
+          <label for="fin-actual">What did it actually cost? (estimate {{finEstFmt}})</label>
+          <input id="fin-actual" class="inp" inputmode="decimal" value="{{finActual}}" onChange="{{setFinActual}}">
+          <span class="{{finDiffCls}}">{{finDiffText}}</span>
+          <sc-if value="{{finRed}}" hint-placeholder-val="{{ false }}"><span class="neg">{{finRedText}}</span></sc-if>
+        </div>
+        <div class="field">
+          <span class="flabel">After photo for the trophy wall</span>
+          <div class="trophy">
+            <div class="ph">
+              <em>Before</em>
+              <sc-if value="{{finHasBefore}}" hint-placeholder-val="{{ false }}"><img src="{{finBefore}}" alt="Before"></sc-if>
+              <sc-if value="{{finNoBefore}}" hint-placeholder-val="{{ true }}"><span>No photo</span></sc-if>
+            </div>
+            <label class="ph photolbl">
+              <em>After</em>
+              <sc-if value="{{finHasAfter}}" hint-placeholder-val="{{ false }}"><img src="{{finAfter}}" alt="After"></sc-if>
+              <sc-if value="{{finNoAfter}}" hint-placeholder-val="{{ true }}"><span>+ Add photo</span></sc-if>
+              <input class="hidefile" type="file" accept="image/*" onChange="{{setFinAfter}}">
+            </label>
+          </div>
+        </div>
+        <button class="btn pri full" onClick="{{confirmFinish}}">{{finBtn}}</button>
+        <button class="btn ghost full" onClick="{{cancelFinish}}">Not yet</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- MONTHLY RECAP -->
+  <sc-if value="{{showRecap}}" hint-placeholder-val="{{ false }}">
+    <div class="overlay">
+      <div class="sheet" role="dialog" aria-label="Monthly wrap-up">
+        <div class="col" style="gap: 2px">
+          <span class="lbl">Weekly wrap-up</span>
+          <span class="disp" style="font-size: 26px; font-weight: 800">This week at the house</span>
+        </div>
+        <div class="stats">
+          <div class="stat"><span class="mini">Finished</span><b>{{rcDone}}</b></div>
+          <div class="stat"><span class="mini">Spent</span><b>{{rcSpent}}</b></div>
+          <div class="stat"><span class="mini">XP earned</span><b>{{xp}}</b></div>
+          <div class="stat"><span class="mini">Bonus money</span><b>{{rcBonus}}</b></div>
+        </div>
+        <div class="col" style="gap: 6px">
+          <span class="lbl">Best excuse for free money</span>
+          <span style="font-size: 15px; line-height: 1.4">{{rcBestDrop}}</span>
+        </div>
+        <div class="row between">
+          <span class="lbl">Cards played</span>
+          <span style="font-size: 14px">David {{rcCardsD}} · Anne {{rcCardsA}}</span>
+        </div>
+        <div class="row between">
+          <span class="lbl">Estimates</span>
+          <span class="{{estCls}}">{{estHeadline}}</span>
+        </div>
+        <div class="card dark" style="gap: 4px">
+          <span class="lbl">Coming up</span>
+          <span style="font-size: 15px">{{budgetFmt}} lands {{nextDepositDate}}. Top of the list: {{rcTop}}.</span>
+        </div>
+        <button class="btn pri full" onClick="{{closeRecap}}">Bring on next week</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+    <div class="toast" role="status">{{toast}}</div>
+  </sc-if>
+
+  <nav class="tabs" aria-label="Main">
+    <button class="{{tabCls.board}}" onClick="{{goBoard}}">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path></svg>
+      Board
+    </button>
+    <button class="{{tabCls.pitches}}" onClick="{{goPitches}}">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      Pitches
+      <sc-if value="{{hasBadge}}" hint-placeholder-val="{{ true }}"><span class="badge">{{badge}}</span></sc-if>
+    </button>
+    <button class="{{tabCls.add}}" onClick="{{goAdd}}">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path></svg>
+      Pitch
+    </button>
+    <button class="{{tabCls.trophies}}" onClick="{{goTrophies}}">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"></path><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8"></path></svg>
+      Trophies
+    </button>
+    <button class="{{tabCls.event}}" onClick="{{goEvent}}">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"></path></svg>
+      Events
+    </button>
+  </nav>
+</div>
+</template></template>
+<script><script>!function(n){"function"==typeof define&&define.amd?define(n):n()}(function(){var n,l,t,u,i,o,e,r,f,c,s,a,h,p=65536,v=1<<17,d={},y=[],w=/acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i,_=Array.isArray;function g(n,l){for(var t in l)n[t]=l[t];return n}function m(n){n&&n.parentNode&&n.parentNode.removeChild(n)}function b(l,t,u){var i,o,e,r={};for(e in t)"key"==e?i=t[e]:"ref"==e?o=t[e]:r[e]=t[e];if(arguments.length>2&&(r.children=arguments.length>3?n.call(arguments,2):u),"function"==typeof l&&null!=l.defaultProps)for(e in l.defaultProps)void 0===r[e]&&(r[e]=l.defaultProps[e]);return k(l,r,i,o,null)}function k(n,u,i,o,e){var r={type:n,props:u,key:i,ref:o,__k:null,__:null,__b:0,__e:null,__d:void 0,__c:null,constructor:void 0,__v:null==e?++t:e,__i:-1,__u:0};return null==e&&null!=l.vnode&&l.vnode(r),r}function C(n){return n.children}function x(n,l){this.props=n,this.context=l}function S(n,l){if(null==l)return n.__?S(n.__,n.__i+1):null;for(var t;l<n.__k.length;l++)if(null!=(t=n.__k[l])&&null!=t.__e)return t.__e;return"function"==typeof n.type?S(n):null}function M(n){var l,t;if(null!=(n=n.__)&&null!=n.__c){for(n.__e=n.__c.base=null,l=0;l<n.__k.length;l++)if(null!=(t=n.__k[l])&&null!=t.__e){n.__e=n.__c.base=t.__e;break}return M(n)}}function P(n){(!n.__d&&(n.__d=!0)&&i.push(n)&&!$.__r++||o!==l.debounceRendering)&&((o=l.debounceRendering)||e)($)}function $(){var n,t,u,o,e,f,c,s;for(i.sort(r);n=i.shift();)n.__d&&(t=i.length,o=void 0,f=(e=(u=n).__v).__e,c=[],s=[],u.__P&&((o=g({},e)).__v=e.__v+1,l.vnode&&l.vnode(o),O(u.__P,o,e,u.__n,u.__P.namespaceURI,32&e.__u?[f]:null,c,null==f?S(e):f,!!(32&e.__u),s),o.__v=e.__v,o.__.__k[o.__i]=o,V(c,o,s),o.__e!=f&&M(o)),i.length>t&&i.sort(r));$.__r=0}function I(n,l,t,u,i,o,e,r,f,c,s){var a,h,v,w,_,g=u&&u.__k||y,m=l.length;for(t.__d=f,A(t,l,g),f=t.__d,a=0;a<m;a++)null!=(v=t.__k[a])&&(h=-1===v.__i?d:g[v.__i]||d,v.__i=a,O(n,v,h,i,o,e,r,f,c,s),w=v.__e,v.ref&&h.ref!=v.ref&&(h.ref&&z(h.ref,null,v),s.push(v.ref,v.__c||w,v)),null==_&&null!=w&&(_=w),v.__u&p||h.__k===v.__k?f=E(v,f,n):"function"==typeof v.type&&void 0!==v.__d?f=v.__d:w&&(f=w.nextSibling),v.__d=void 0,v.__u&=-196609);t.__d=f,t.__e=_}function A(n,l,t){var u,i,o,e,r,f=l.length,c=t.length,s=c,a=0;for(n.__k=[],u=0;u<f;u++)null!=(i=l[u])&&"boolean"!=typeof i&&"function"!=typeof i?(e=u+a,(i=n.__k[u]="string"==typeof i||"number"==typeof i||"bigint"==typeof i||i.constructor==String?k(null,i,null,null,null):_(i)?k(C,{children:i},null,null,null):void 0===i.constructor&&i.__b>0?k(i.type,i.props,i.key,i.ref?i.ref:null,i.__v):i).__=n,i.__b=n.__b+1,o=null,-1!==(r=i.__i=F(i,t,e,s))&&(s--,(o=t[r])&&(o.__u|=v)),null==o||null===o.__v?(-1==r&&a--,"function"!=typeof i.type&&(i.__u|=p)):r!==e&&(r==e-1?a--:r==e+1?a++:(r>e?a--:a++,i.__u|=p))):i=n.__k[u]=null;if(s)for(u=0;u<c;u++)null!=(o=t[u])&&0==(o.__u&v)&&(o.__e==n.__d&&(n.__d=S(o)),N(o,o))}function E(n,l,t){var u,i;if("function"==typeof n.type){for(u=n.__k,i=0;u&&i<u.length;i++)u[i]&&(u[i].__=n,l=E(u[i],l,t));return l}n.__e!=l&&(l&&n.type&&!t.contains(l)&&(l=S(n)),t.insertBefore(n.__e,l||null),l=n.__e);do{l=l&&l.nextSibling}while(null!=l&&8===l.nodeType);return l}function F(n,l,t,u){var i=n.key,o=n.type,e=t-1,r=t+1,f=l[t];if(null===f||f&&i==f.key&&o===f.type&&0==(f.__u&v))return t;if(u>(null!=f&&0==(f.__u&v)?1:0))for(;e>=0||r<l.length;){if(e>=0){if((f=l[e])&&0==(f.__u&v)&&i==f.key&&o===f.type)return e;e--}if(r<l.length){if((f=l[r])&&0==(f.__u&v)&&i==f.key&&o===f.type)return r;r++}}return-1}function H(n,l,t){"-"===l[0]?n.setProperty(l,null==t?"":t):n[l]=null==t?"":"number"!=typeof t||w.test(l)?t:t+"px"}function L(n,l,t,u,i){var o;n:if("style"===l)if("string"==typeof t)n.style.cssText=t;else{if("string"==typeof u&&(n.style.cssText=u=""),u)for(l in u)t&&l in t||H(n.style,l,"");if(t)for(l in t)u&&t[l]===u[l]||H(n.style,l,t[l])}else if("o"===l[0]&&"n"===l[1])o=l!==(l=l.replace(/(PointerCapture)$|Capture$/i,"$1")),l=l.toLowerCase()in n||"onFocusOut"===l||"onFocusIn"===l?l.toLowerCase().slice(2):l.slice(2),n.l||(n.l={}),n.l[l+o]=t,t?u?t.t=u.t:(t.t=f,n.addEventListener(l,o?s:c,o)):n.removeEventListener(l,o?s:c,o);else{if("http://www.w3.org/2000/svg"==i)l=l.replace(/xlink(H|:h)/,"h").replace(/sName$/,"s");else if("width"!=l&&"height"!=l&&"href"!=l&&"list"!=l&&"form"!=l&&"tabIndex"!=l&&"download"!=l&&"rowSpan"!=l&&"colSpan"!=l&&"role"!=l&&"popover"!=l&&l in n)try{n[l]=null==t?"":t;break n}catch(n){}"function"==typeof t||(null==t||!1===t&&"-"!==l[4]?n.removeAttribute(l):n.setAttribute(l,"popover"==l&&1==t?"":t))}}function T(n){return function(t){if(this.l){var u=this.l[t.type+n];if(null==t.u)t.u=f++;else if(t.u<u.t)return;return u(l.event?l.event(t):t)}}}function O(n,t,u,i,o,e,r,f,c,s){var a,h,p,v,d,y,w,m,b,k,S,M,P,$,A,E,F=t.type;if(void 0!==t.constructor)return null;128&u.__u&&(c=!!(32&u.__u),e=[f=t.__e=u.__e]),(a=l.__b)&&a(t);n:if("function"==typeof F)try{if(m=t.props,b="prototype"in F&&F.prototype.render,k=(a=F.contextType)&&i[a.__c],S=a?k?k.props.value:a.__:i,u.__c?w=(h=t.__c=u.__c).__=h.__E:(b?t.__c=h=new F(m,S):(t.__c=h=new x(m,S),h.constructor=F,h.render=R),k&&k.sub(h),h.props=m,h.state||(h.state={}),h.context=S,h.__n=i,p=h.__d=!0,h.__h=[],h._sb=[]),b&&null==h.__s&&(h.__s=h.state),b&&null!=F.getDerivedStateFromProps&&(h.__s==h.state&&(h.__s=g({},h.__s)),g(h.__s,F.getDerivedStateFromProps(m,h.__s))),v=h.props,d=h.state,h.__v=t,p)b&&null==F.getDerivedStateFromProps&&null!=h.componentWillMount&&h.componentWillMount(),b&&null!=h.componentDidMount&&h.__h.push(h.componentDidMount);else{if(b&&null==F.getDerivedStateFromProps&&m!==v&&null!=h.componentWillReceiveProps&&h.componentWillReceiveProps(m,S),!h.__e&&(null!=h.shouldComponentUpdate&&!1===h.shouldComponentUpdate(m,h.__s,S)||t.__v===u.__v)){for(t.__v!==u.__v&&(h.props=m,h.state=h.__s,h.__d=!1),t.__e=u.__e,t.__k=u.__k,t.__k.some(function(n){n&&(n.__=t)}),M=0;M<h._sb.length;M++)h.__h.push(h._sb[M]);h._sb=[],h.__h.length&&r.push(h);break n}null!=h.componentWillUpdate&&h.componentWillUpdate(m,h.__s,S),b&&null!=h.componentDidUpdate&&h.__h.push(function(){h.componentDidUpdate(v,d,y)})}if(h.context=S,h.props=m,h.__P=n,h.__e=!1,P=l.__r,$=0,b){for(h.state=h.__s,h.__d=!1,P&&P(t),a=h.render(h.props,h.state,h.context),A=0;A<h._sb.length;A++)h.__h.push(h._sb[A]);h._sb=[]}else do{h.__d=!1,P&&P(t),a=h.render(h.props,h.state,h.context),h.state=h.__s}while(h.__d&&++$<25);h.state=h.__s,null!=h.getChildContext&&(i=g(g({},i),h.getChildContext())),b&&!p&&null!=h.getSnapshotBeforeUpdate&&(y=h.getSnapshotBeforeUpdate(v,d)),I(n,_(E=null!=a&&a.type===C&&null==a.key?a.props.children:a)?E:[E],t,u,i,o,e,r,f,c,s),h.base=t.__e,t.__u&=-161,h.__h.length&&r.push(h),w&&(h.__E=h.__=null)}catch(n){if(t.__v=null,c||null!=e){for(t.__u|=c?160:128;f&&8===f.nodeType&&f.nextSibling;)f=f.nextSibling;e[e.indexOf(f)]=null,t.__e=f}else t.__e=u.__e,t.__k=u.__k;l.__e(n,t,u)}else null==e&&t.__v===u.__v?(t.__k=u.__k,t.__e=u.__e):t.__e=j(u.__e,t,u,i,o,e,r,c,s);(a=l.diffed)&&a(t)}function V(n,t,u){t.__d=void 0;for(var i=0;i<u.length;i++)z(u[i],u[++i],u[++i]);l.__c&&l.__c(t,n),n.some(function(t){try{n=t.__h,t.__h=[],n.some(function(n){n.call(t)})}catch(n){l.__e(n,t.__v)}})}function j(t,u,i,o,e,r,f,c,s){var a,h,p,v,y,w,g,b=i.props,k=u.props,C=u.type;if("svg"===C?e="http://www.w3.org/2000/svg":"math"===C?e="http://www.w3.org/1998/Math/MathML":e||(e="http://www.w3.org/1999/xhtml"),null!=r)for(a=0;a<r.length;a++)if((y=r[a])&&"setAttribute"in y==!!C&&(C?y.localName===C:3===y.nodeType)){t=y,r[a]=null;break}if(null==t){if(null===C)return document.createTextNode(k);t=document.createElementNS(e,C,k.is&&k),c&&(l.__m&&l.__m(u,r),c=!1),r=null}if(null===C)b===k||c&&t.data===k||(t.data=k);else{if(r=r&&n.call(t.childNodes),b=i.props||d,!c&&null!=r)for(b={},a=0;a<t.attributes.length;a++)b[(y=t.attributes[a]).name]=y.value;for(a in b)if(y=b[a],"children"==a);else if("dangerouslySetInnerHTML"==a)p=y;else if(!(a in k)){if("value"==a&&"defaultValue"in k||"checked"==a&&"defaultChecked"in k)continue;L(t,a,null,y,e)}for(a in k)y=k[a],"children"==a?v=y:"dangerouslySetInnerHTML"==a?h=y:"value"==a?w=y:"checked"==a?g=y:c&&"function"!=typeof y||b[a]===y||L(t,a,y,b[a],e);if(h)c||p&&(h.__html===p.__html||h.__html===t.innerHTML)||(t.innerHTML=h.__html),u.__k=[];else if(p&&(t.innerHTML=""),I(t,_(v)?v:[v],u,i,o,"foreignObject"===C?"http://www.w3.org/1999/xhtml":e,r,f,r?r[0]:i.__k&&S(i,0),c,s),null!=r)for(a=r.length;a--;)m(r[a]);c||(a="value","progress"===C&&null==w?t.removeAttribute("value"):void 0!==w&&(w!==t[a]||"progress"===C&&!w||"option"===C&&w!==b[a])&&L(t,a,w,b[a],e),a="checked",void 0!==g&&g!==t[a]&&L(t,a,g,b[a],e))}return t}function z(n,t,u){try{if("function"==typeof n){var i="function"==typeof n.__u;i&&n.__u(),i&&null==t||(n.__u=n(t))}else n.current=t}catch(n){l.__e(n,u)}}function N(n,t,u){var i,o;if(l.unmount&&l.unmount(n),(i=n.ref)&&(i.current&&i.current!==n.__e||z(i,null,t)),null!=(i=n.__c)){if(i.componentWillUnmount)try{i.componentWillUnmount()}catch(n){l.__e(n,t)}i.base=i.__P=null}if(i=n.__k)for(o=0;o<i.length;o++)i[o]&&N(i[o],t,u||"function"!=typeof n.type);u||m(n.__e),n.__c=n.__=n.__e=n.__d=void 0}function R(n,l,t){return this.constructor(n,t)}function q(t,u,i){var o,e,r,f;l.__&&l.__(t,u),e=(o="function"==typeof i)?null:i&&i.__k||u.__k,r=[],f=[],O(u,t=(!o&&i||u).__k=b(C,null,[t]),e||d,d,u.namespaceURI,!o&&i?[i]:e?null:u.firstChild?n.call(u.childNodes):null,r,!o&&i?i:e?e.__e:u.firstChild,o,f),V(r,t,f)}n=y.slice,l={__e:function(n,l,t,u){for(var i,o,e;l=l.__;)if((i=l.__c)&&!i.__)try{if((o=i.constructor)&&null!=o.getDerivedStateFromError&&(i.setState(o.getDerivedStateFromError(n)),e=i.__d),null!=i.componentDidCatch&&(i.componentDidCatch(n,u||{}),e=i.__d),e)return i.__E=i}catch(l){n=l}throw n}},t=0,u=function(n){return null!=n&&null==n.constructor},x.prototype.setState=function(n,l){var t;t=null!=this.__s&&this.__s!==this.state?this.__s:this.__s=g({},this.state),"function"==typeof n&&(n=n(g({},t),this.props)),n&&g(t,n),null!=n&&this.__v&&(l&&this._sb.push(l),P(this))},x.prototype.forceUpdate=function(n){this.__v&&(this.__e=!0,n&&this.__h.push(n),P(this))},x.prototype.render=C,i=[],e="function"==typeof Promise?Promise.prototype.then.bind(Promise.resolve()):setTimeout,r=function(n,l){return n.__v.__b-l.__v.__b},$.__r=0,f=0,c=T(!1),s=T(!0),a=0,h={__proto__:null,render:q,hydrate:function n(l,t){q(l,t,n)},createElement:b,h:b,Fragment:C,createRef:function(){return{current:null}},isValidElement:u,Component:x,cloneElement:function(l,t,u){var i,o,e,r,f=g({},l.props);for(e in l.type&&l.type.defaultProps&&(r=l.type.defaultProps),t)"key"==e?i=t[e]:"ref"==e?o=t[e]:f[e]=void 0===t[e]&&void 0!==r?r[e]:t[e];return arguments.length>2&&(f.children=arguments.length>3?n.call(arguments,2):u),k(l.type,f,i||l.key,o||l.ref,null)},createContext:function(n,l){var t={__c:l="__cC"+a++,__:n,Consumer:function(n,l){return n.children(l)},Provider:function(n){var t,u;return this.getChildContext||(t=new Set,(u={})[l]=this,this.getChildContext=function(){return u},this.componentWillUnmount=function(){t=null},this.shouldComponentUpdate=function(n){this.props.value!==n.value&&t.forEach(function(n){n.__e=!0,P(n)})},this.sub=function(n){t.add(n);var l=n.componentWillUnmount;n.componentWillUnmount=function(){t&&t.delete(n),l&&l.call(n)}}),n.children}};return t.Provider.__=t.Consumer.contextType=t},toChildArray:function n(l,t){return t=t||[],null==l||"boolean"==typeof l||(_(l)?l.some(function(l){n(l,t)}):t.push(l)),t},options:l},typeof module<"u"?module.exports=h:self.preact=h});
+//# sourceMappingURL=preact.min.umd.js.map
+</script></script>
+<script src="/house-quest/static/app.js"></script>
+</body>
+</html>

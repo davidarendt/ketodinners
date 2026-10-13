@@ -70,6 +70,44 @@
 [functions."weight-reminders"]
   schedule = "*/15 * * * *"
 
+# --- House Quest (two-player house-upgrade game at /house-quest/) ---
+[[redirects]]
+  from = "/api/hq-auth"
+  to = "/.netlify/functions/hq-auth"
+  status = 200
+
+[[redirects]]
+  from = "/api/hq-state"
+  to = "/.netlify/functions/hq-state"
+  status = 200
+
+[[redirects]]
+  from = "/api/hq-actions"
+  to = "/.netlify/functions/hq-actions"
+  status = 200
+
+[[redirects]]
+  from = "/api/hq-upload"
+  to = "/.netlify/functions/hq-upload"
+  status = 200
+
+[[redirects]]
+  from = "/api/hq-push"
+  to = "/.netlify/functions/hq-push"
+  status = 200
+
+# Scheduled jobs (cron is UTC; each function self-gates to America/New_York).
+[functions."hq-deposit"]
+  schedule = "0 10,11,12 * * *"   # ~6am ET, once per week on the deposit day
+[functions."hq-drops"]
+  schedule = "0 13,16,19,22 * * *" # spread across 9am–8pm ET
+[functions."hq-holidays"]
+  schedule = "0 12,13 * * *"       # ~8am ET
+[functions."hq-nudges"]
+  schedule = "0 14,15 * * *"       # ~10am ET
+[functions."hq-push-sender"]
+  schedule = "*/15 * * * *"
+
 [[redirects]]
   from = "/recipes/*"
   to = "/.netlify/functions/recipe-page"

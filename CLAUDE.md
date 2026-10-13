@@ -22,6 +22,19 @@ An unrelated personal side project piggybacks on the same Netlify site + Supabas
 
 Note: both apps share one origin, so CacheStorage is shared. Each service worker's `activate` cleanup only deletes caches matching its own name prefix (`ketodinners` / `weighttracker`) so they don't wipe each other.
 
+### Third app: "House Quest" two-player house-upgrade game (`/house-quest/`)
+
+Another self-contained side project on the same Netlify site + Supabase project, built to a handoff spec + clickable prototype (kept in the user's Downloads: `house-quest-spec.md`, `house-quest-prototype.html`). It's a two-player (David & Anne, one fixed household) PWA for pitching, voting on, budgeting, drafting and tracking house upgrades, with game mechanics (snake draft, power/treat cards, XP/levels, 30 achievements, surprise drops, holidays, weekly wildcard). Like the Almanac, it's deliberately self-contained (`hq_*` tables, own `_lib`, own functions) so it can be lifted out later.
+
+- **Server owns all state and randomness.** The prototype's `class Component` was the reference implementation; its game rules are ported server-side. The phone renders entirely from a snapshot and sends actions — it never decides a card draw, wildcard roll or drop.
+- **Front-end**: `web/house-quest/` — the prototype's `<style>` + `<template id="dc-template">` + inlined Preact runtime + template engine, **verbatim**. `static/app.js` replaces the in-memory Component with a server-wired one: `renderVals()` keeps the prototype's pure display derivations; every mutation calls `/api/hq-actions` and re-renders from the returned snapshot; polls `/api/hq-state` every ~20s. To change behavior/rules, edit the server (`hq-actions.js` + `_lib/housequest.js`), not the display derivations. Installs as its own home-screen app (manifest + SW scoped to `/house-quest/`, cache prefix `housequest`). Has a dark mode (resolved to `:root[data-theme=…]`).
+- **API**: `_lib/housequest.js` (self-contained REST + scrypt/HMAC auth + `loadState()` + rule helpers like `scoreOf`/`randType`/`drawCard`/`gainXp`/`takeEffect`/`evalAchievements`), `hq-auth.js` (login; two seeded accounts, passcode claimed on first login), `hq-state.js` (snapshot GET), `hq-actions.js` (the ~25-action dispatcher = `applyAction`), `hq-upload.js` (photos → `house-quest-photos` bucket), `hq-push.js` (VAPID sub). Mapped at `/api/hq-*`.
+- **Scheduled functions** (cron is UTC; each self-gates to America/New_York): `hq-deposit` (weekly deposit + opens the draft; rollover-off **keeps a negative balance**, adding the budget on top), `hq-drops`, `hq-holidays`, `hq-nudges`, `hq-push-sender` (respects per-category prefs + quiet hours).
+- **Data**: `public.hq_*` tables + `hq_household` singleton (balance is never stored — it's the sum of `hq_ledger`). Permissive-anon RLS; the function is the trust boundary. Content/logic (achievement defs, holidays, wildcard deck, drop reasons) are server constants in `_lib/housequest.js`; only `hq_card_catalog` is a table (so custom treats persist).
+- **Auth**: `HQ_AUTH_SECRET` (falls back to `WEIGHT_AUTH_SECRET`). **Push**: `HQ_VAPID_*` (falls back to `WEIGHT_VAPID_*`). Set with `netlify env:set`.
+
+Each SW's `activate` cleanup only deletes its own prefix (`ketodinners` / `weighttracker` / `housequest`), so the three apps don't wipe each other's caches.
+
 ## Common commands
 
 Daily deploy (Windows PowerShell, from repo root):
