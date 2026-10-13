@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo actually is
 
-A keto meal-plan site deployed to Netlify (site: `ketodinners`), **rebranded in the UI as "Dinner Planner"** (cream/terracotta/sage, Caprasimo + Figtree). The backend, data layer, and Supabase project names are unchanged — only the skin. Two coexisting stacks:
+A keto meal-plan site deployed to Netlify (site: `appsbydavid`, formerly `ketodinners`; URL `https://appsbydavid.netlify.app`), **rebranded in the UI as "Dinner Planner"** (cream/terracotta/sage, Caprasimo + Figtree). The backend, data layer, and Supabase project names are unchanged — only the skin. Two coexisting stacks:
 
 - **Deployed app** — static SPA in `web/` + Netlify Functions in `netlify/functions/`, backed by Supabase. This is what users see.
 - **Legacy Python tools** — `meal_planner.py` (CLI) and `meal_planner_web.py` (local Flask-style server). Predate the Netlify deploy and are not part of the live site. Only touch them if the user explicitly says so.
