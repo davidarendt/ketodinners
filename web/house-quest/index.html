@@ -191,6 +191,19 @@ html,body{margin:0;background:#D9DDE3}
 .hqhint{margin:0;font-size:12px;color:#8A8F9A;text-align:center}
 .hqerr{margin:0;color:#B8520F;font-size:14px;font-weight:600;text-align:center;min-height:18px}
 
+/* ---- Scroll + installed-PWA / iOS safe areas ---- */
+/* A flex:1 child needs min-height:0 to actually scroll instead of growing. */
+.scroll{min-height:0}
+.hqlogin{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+@media (max-width:480px){
+  /* Lock the page; only the .scroll region scrolls (keeps the tab bar fixed). */
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  /* Push content clear of the status bar / notch and the home indicator. */
+  .app{box-sizing:border-box;padding-top:env(safe-area-inset-top)}
+  .scroll{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .tabs{padding-bottom:calc(22px + env(safe-area-inset-bottom)) !important}
+}
+
 /* ---- Dark theme (resolved to an explicit data-theme by app.js) ---- */
 :root[data-theme="dark"] html,:root[data-theme="dark"] body{background:#0d0f14}
 :root[data-theme="dark"] .app{background:#14161b;color:#eceef2}
