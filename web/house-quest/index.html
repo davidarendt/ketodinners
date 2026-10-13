@@ -770,6 +770,17 @@ html,body{margin:0;background:#D9DDE3}
         <span class="mini" style="color: #C3C8D2">Set aside {{reservedFmt}} · Free {{availableFmt}}</span>
       </div>
 
+      <div class="card" style="gap: 10px">
+        <span class="lbl">Install the app</span>
+        <span class="mini" style="line-height: 1.45">{{installHint}}</span>
+        <sc-if value="{{canInstall}}" hint-placeholder-val="{{ true }}">
+          <button class="btn pri full" onClick="{{installApp}}">Add to Home Screen</button>
+        </sc-if>
+        <sc-if value="{{isInstalled}}" hint-placeholder-val="{{ false }}">
+          <span class="chip ready" style="align-self: flex-start">Installed on this device</span>
+        </sc-if>
+      </div>
+
       <div class="card" style="gap: 14px">
         <span class="lbl">Budget</span>
         <div class="field">

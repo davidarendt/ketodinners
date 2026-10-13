@@ -12,6 +12,21 @@
   function applyTheme(t) { document.documentElement.dataset.theme = t; }
   applyTheme(localStorage.getItem("hq_theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
 
+  // ---- PWA install prompt (captured for the Settings "Install the app" card) ----
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; if (window.__hq) window.__hq.forceUpdate(); });
+  window.addEventListener("appinstalled", () => { deferredPrompt = null; if (window.__hq) window.__hq.forceUpdate(); });
+  function isStandalone() { return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true; }
+  function installHintText(installed) {
+    const ua = navigator.userAgent;
+    const iOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const android = /Android/.test(ua);
+    if (installed) return "House Quest is installed on this device — open it from your home screen like any app. It runs full-screen and works offline.";
+    if (iOS) return "On iPhone/iPad: open this page in Safari, tap the Share button (the square with an up-arrow), scroll down and tap “Add to Home Screen,” then “Add.” House Quest then opens full-screen like a normal app.";
+    if (android) return "On Android: tap the ⋮ menu in Chrome, then “Add to Home screen” (or “Install app”), and confirm. You can also use the button below if it appears.";
+    return "On your computer: click the install icon in the browser’s address bar (or the button below). On your phone, open this page in Safari (iPhone) or Chrome (Android) and use “Add to Home Screen.”";
+  }
+
   // ---- auth ----
   const tokenKey = "hq_token", userKey = "hq_user";
   const getToken = () => localStorage.getItem(tokenKey) || "";
@@ -101,6 +116,7 @@
       };
     }
     componentDidMount() {
+      window.__hq = this;
       this.load();
       this._poll = setInterval(() => { if (!document.hidden && !this.s.finId && !this.s.reveal) this.load(); }, 20000);
       document.addEventListener("visibilitychange", () => { if (!document.hidden) this.load(); });
@@ -120,6 +136,7 @@
       if (this.__update) this.__update();
     }
     setLocal(patch) { Object.assign(this.s, patch); if (this.__update) this.__update(); }
+    forceUpdate() { if (this.__update) this.__update(); }
     flash(msg) { this.setLocal({ toast: msg }); clearTimeout(this._t); this._t = setTimeout(() => this.setLocal({ toast: "" }), 2600); }
     act(action, payload) {
       return api("/hq-actions", { method: "POST", body: JSON.stringify(Object.assign({ action }, payload || {})) })
@@ -612,6 +629,15 @@
         freqOpts: [1, 2, 3].map((n) => ({ n, cls: n === s.dropsPerMonth ? "sbtn on" : "sbtn", pick: () => this.act("update_household", { patch: { dropsPerMonth: n } }) })),
         handOpts: [3, 5, 7].map((n) => ({ n, cls: n === s.maxHand ? "sbtn on" : "sbtn", pick: () => this.act("update_household", { patch: { maxHand: n } }) })),
         themeOn: themeDark, themeCls: sw(themeDark), toggleTheme: () => { const cur = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; localStorage.setItem("hq_theme", cur); applyTheme(cur); if (this.__update) this.__update(); },
+        isInstalled: isStandalone(), canInstall: !!deferredPrompt && !isStandalone(), installHint: installHintText(isStandalone()),
+        installApp: () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((c) => { this.flash(c && c.outcome === "accepted" ? "Installing…" : "Maybe later"); }).finally(() => { deferredPrompt = null; this.forceUpdate(); });
+          } else {
+            this.flash("Use your browser's menu to Add to Home Screen.");
+          }
+        },
         adjAmt: s.adjAmt, adjNote: s.adjNote,
         setAdjAmt: (e) => this.setLocal({ adjAmt: e.target.value }), setAdjNote: (e) => this.setLocal({ adjNote: e.target.value }),
         addAdj: () => { const n = parseFloat(String(s.adjAmt).replace(/[^0-9.\-]/g, "")); if (!n) { this.flash("Enter an amount like 40 or -25"); return; } this.act("adjust_balance", { amount: s.adjAmt, note: s.adjNote }); this.setLocal({ adjAmt: "", adjNote: "" }); },
