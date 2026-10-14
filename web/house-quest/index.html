@@ -201,7 +201,10 @@ html,body{margin:0;background:#D9DDE3}
   /* Push content clear of the status bar / notch and the home indicator. */
   .app{box-sizing:border-box;padding-top:env(safe-area-inset-top)}
   .scroll{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-  .tabs{padding-bottom:calc(22px + env(safe-area-inset-bottom)) !important}
+  /* Base 8px gap above the home indicator; the inset reserves the indicator
+     itself. (The prototype's 22px was its own in-browser reserve — adding the
+     real inset on top of it left a too-tall band that lifted the tab bar.) */
+  .tabs{padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important}
 }
 
 /* ---- Dark theme (resolved to an explicit data-theme by app.js) ---- */
