@@ -3,54 +3,90 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<title>Dinner Planner</title>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#56633F">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Dinner Planner">
-<meta property="og:title" content="Dinner Planner">
-<meta property="og:description" content="Twelve weeks of keto dinners, no repeats — with the shopping list already written.">
-<meta property="og:image" content="/og-image.png">
+<title>appsbydavid</title>
+<meta name="theme-color" content="#1b1f27">
+<meta name="description" content="A little home for David's apps — pick one to open.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/styles.css">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#f6f4ef; --bg2:#eceae4; --ink:#1b1f27; --muted:#5a6170; --card:#ffffff;
+    --border:rgba(27,31,39,.08); --shadow:0 1px 2px rgba(27,31,39,.06),0 10px 30px rgba(27,31,39,.07);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg1:#0f1115; --bg2:#14161b; --ink:#eceef2; --muted:#9aa3b2; --card:#1b1f27;
+      --border:rgba(255,255,255,.08); --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 40px rgba(0,0,0,.45); }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:'Figtree',system-ui,-apple-system,sans-serif;color:var(--ink);
+    background:radial-gradient(120% 90% at 50% 0%,var(--bg2),var(--bg1));
+    min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:calc(28px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom));
+  }
+  header{text-align:center;margin-bottom:28px;max-width:640px}
+  .brand{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  h1{font-size:clamp(28px,7vw,40px);font-weight:800;line-height:1.05;margin:8px 0 6px;letter-spacing:-.02em}
+  header p{margin:0;color:var(--muted);font-size:15px}
+  .grid{display:grid;gap:16px;width:100%;max-width:980px;grid-template-columns:repeat(3,1fr)}
+  @media (max-width:720px){ .grid{grid-template-columns:1fr;max-width:420px} }
+  .app{
+    display:flex;gap:16px;align-items:center;text-decoration:none;color:inherit;background:var(--card);
+    border:1px solid var(--border);border-radius:22px;padding:18px;box-shadow:var(--shadow);
+    transition:transform .14s ease,box-shadow .14s ease;position:relative;overflow:hidden;
+  }
+  @media (min-width:721px){ .app{flex-direction:column;align-items:flex-start;text-align:left;min-height:220px;justify-content:space-between} }
+  .app:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(27,31,39,.08),0 20px 46px rgba(27,31,39,.14)}
+  .app:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .app::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--accent)}
+  .icon{width:64px;height:64px;border-radius:16px;flex:none;object-fit:cover;box-shadow:0 2px 8px rgba(27,31,39,.18);background:#fff}
+  .meta{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .name{font-size:19px;font-weight:800;letter-spacing:-.01em}
+  .tag{font-size:13.5px;color:var(--muted);line-height:1.4}
+  .go{margin-top:2px;font-size:13px;font-weight:700;color:var(--accent);display:inline-flex;align-items:center;gap:5px}
+  footer{margin-top:30px;color:var(--muted);font-size:12.5px;text-align:center}
+</style>
 </head>
 <body>
-<main id="main">
-  <section id="viewMealplan" class="view"></section>
-  <section id="viewBrowse" class="view" hidden></section>
-  <section id="viewShopping" class="view" hidden></section>
-  <p id="loadingMsg" class="loading-msg">Setting the table…</p>
-</main>
+  <header>
+    <div class="brand">apps&nbsp;by&nbsp;david</div>
+    <h1>Pick an app</h1>
+    <p>Three little apps, one roof.</p>
+  </header>
 
-<nav class="tabbar">
-  <button class="tab active" data-view="mealplan">
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
-    <span>Plan</span>
-  </button>
-  <button class="tab" data-view="browse">
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-    <span>Browse</span>
-  </button>
-  <button class="tab" data-view="shopping">
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-    <span>Shop</span>
-    <span class="tab-badge" id="tabBadge" hidden>0</span>
-  </button>
-</nav>
+  <main class="grid">
+    <a class="app" href="/planner/" style="--accent:#7a8a5e">
+      <img class="icon" src="/icons/icon-192.png" alt="Dinner Planner logo" width="64" height="64">
+      <div class="meta">
+        <span class="name">Dinner Planner</span>
+        <span class="tag">Twelve weeks of keto dinners, no repeats — with the shopping list already written.</span>
+        <span class="go">Open &rarr;</span>
+      </div>
+    </a>
 
-<script src="/static/app.js"></script>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('/sw.js').catch(function () {});
-  });
-}
-</script>
+    <a class="app" href="/weight/" style="--accent:#b08968">
+      <img class="icon" src="/weight/icons/icon-192.png" alt="The Almanac logo" width="64" height="64">
+      <div class="meta">
+        <span class="name">The Almanac</span>
+        <span class="tag">A record of mass &amp; trend — weight tracking with rolling averages and goal projection.</span>
+        <span class="go">Open &rarr;</span>
+      </div>
+    </a>
+
+    <a class="app" href="/house-quest/" style="--accent:#2f5bea">
+      <img class="icon" src="/house-quest/icons/icon-192.png" alt="House Quest logo" width="64" height="64">
+      <div class="meta">
+        <span class="name">House Quest</span>
+        <span class="tag">Plan, budget and build the house — together. A two-player upgrade game.</span>
+        <span class="go">Open &rarr;</span>
+      </div>
+    </a>
+  </main>
+
+  <footer>appsbydavid.netlify.app</footer>
 </body>
 </html>

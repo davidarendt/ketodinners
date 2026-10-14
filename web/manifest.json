@@ -2,7 +2,7 @@
   "name": "Dinner Planner",
   "short_name": "Dinner Planner",
   "description": "Twelve weeks of keto dinners, no repeats — with the shopping list already written.",
-  "start_url": "/",
+  "start_url": "/planner/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

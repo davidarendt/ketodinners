@@ -300,7 +300,7 @@ exports.handler = async function(event) {
 
   const mealimeLink = `<div style="max-width:860px;margin:0 auto;padding:0 20px 32px"><div style="margin-top:20px;padding-top:20px;border-top:1px solid rgba(0,0,0,.08);text-align:right"><a href="/mealime/${slug}" style="color:#C4622D;font-size:13px;text-decoration:none;font-family:'DM Sans',sans-serif;letter-spacing:.3px">View Mealime Import Page \u2192</a></div></div>`;
 
-  const backBtn = `<a href="/" style="position:absolute;top:16px;left:20px;z-index:10;color:rgba(255,255,255,.85);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;text-decoration:none;letter-spacing:.3px;display:flex;align-items:center;gap:6px;text-shadow:0 1px 4px rgba(0,0,0,.4)">&#8592; All Recipes</a>`;
+  const backBtn = `<a href="/planner/" style="position:absolute;top:16px;left:20px;z-index:10;color:rgba(255,255,255,.85);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;text-decoration:none;letter-spacing:.3px;display:flex;align-items:center;gap:6px;text-shadow:0 1px 4px rgba(0,0,0,.4)">&#8592; All Recipes</a>`;
   html = html.replace(/(<div class="hero">)/, '$1' + backBtn);
   html = html.replace('</head>', RESKIN_STYLES + MOBILE_STYLES + '\n</head>');
   html = html.replace('</body>', mealimeLink + '\n' + editPanel(slug, current) + '\n</body>');
