@@ -1,7 +1,7 @@
 // Keto Dinners service worker — offline shell + fast loads.
 // Network-first for same-origin GETs (so deploys show up), cache fallback offline.
 // API + function calls are never cached.
-const CACHE = 'ketodinners-v2';
+const CACHE = 'ketodinners-v3';
 const SHELL = [
   '/',
   '/planner/',

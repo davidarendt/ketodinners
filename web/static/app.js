@@ -324,6 +324,7 @@ function updateCartBar() {
   if (info) info.textContent = n + ' dinner' + (n === 1 ? '' : 's') + ' selected';
   var badge = document.getElementById('tabBadge');
   if (badge) { badge.hidden = n === 0; badge.textContent = n; }
+  renderOnDeck();
 }
 
 // ---- shopping list view ----
@@ -524,9 +525,77 @@ function renderGuide() {
   };
 }
 
+// ---- "On deck": the dinners picked for the shopping list, pinned up top ----
+function makeOnDeckCard(recipe) {
+  var a = document.createElement('a');
+  a.className = 'od-card' + ((states[recipe.id] || {}).completed ? ' done' : '');
+  a.href = recipeUrl(recipe.id);
+  a.dataset.recipeId = recipe.id;
+  var thumb = document.createElement('div');
+  thumb.className = 'od-thumb' + (recipe.image ? '' : ' ph');
+  if (recipe.image) {
+    var img = document.createElement('img');
+    img.loading = 'lazy'; img.src = recipe.image; img.alt = '';
+    thumb.appendChild(img);
+  }
+  var rm = document.createElement('button');
+  rm.type = 'button';
+  rm.className = 'od-remove';
+  rm.setAttribute('aria-label', 'Remove ' + recipe.title + ' from the shopping list');
+  rm.innerHTML = '&times;';
+  rm.addEventListener('click', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    selected.delete(recipe.id);
+    persistSelected();
+    updateAllSelect(recipe.id);
+    updateCartBar();
+  });
+  thumb.appendChild(rm);
+  var name = document.createElement('span');
+  name.className = 'od-name';
+  name.textContent = recipe.title;
+  a.appendChild(thumb);
+  a.appendChild(name);
+  return a;
+}
+
+function renderOnDeck() {
+  var wrap = document.getElementById('onDeck');
+  if (!wrap) return;
+  var n = selected.size;
+  if (!n) { wrap.hidden = true; wrap.innerHTML = ''; return; }
+  var items = recipes.filter(function(r) { return selected.has(r.id); });
+  items.sort(function(a, b) {
+    var pa = (a.positions && a.positions.length) ? Math.min.apply(null, a.positions) : 9999;
+    var pb = (b.positions && b.positions.length) ? Math.min.apply(null, b.positions) : 9999;
+    return pa - pb;
+  });
+  wrap.hidden = false;
+  wrap.innerHTML = '';
+  var head = document.createElement('div');
+  head.className = 'od-head';
+  head.innerHTML = '<span class="od-title">On deck</span><span class="od-count">' + n + ' dinner' + (n === 1 ? '' : 's') + ' for the list</span>';
+  var build = document.createElement('button');
+  build.type = 'button';
+  build.className = 'od-build';
+  build.textContent = 'Build the list →';
+  build.addEventListener('click', buildAndShowShopping);
+  head.appendChild(build);
+  var row = document.createElement('div');
+  row.className = 'od-row';
+  items.forEach(function(r) { row.appendChild(makeOnDeckCard(r)); });
+  wrap.appendChild(head);
+  wrap.appendChild(row);
+}
+
 function renderMealPlan() {
   var el = document.getElementById('viewMealplan');
   el.innerHTML = '';
+  var onDeck = document.createElement('div');
+  onDeck.className = 'ondeck';
+  onDeck.id = 'onDeck';
+  onDeck.hidden = true;
+  el.appendChild(onDeck);
   var seq = [];
   recipes.forEach(function(r) {
     (r.positions || []).forEach(function(p) { seq.push({ pos: p, recipe: r }); });
@@ -542,6 +611,7 @@ function renderMealPlan() {
   list.className = 'rotation';
   seq.forEach(function(item) { list.appendChild(makeRow(item.recipe, item.pos)); });
   el.appendChild(list);
+  renderOnDeck();
 }
 
 function dishMeta(r) {
