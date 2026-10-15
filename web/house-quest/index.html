@@ -191,29 +191,41 @@ html,body{margin:0;background:#D9DDE3}
 .hqhint{margin:0;font-size:12px;color:#8A8F9A;text-align:center}
 .hqerr{margin:0;color:#B8520F;font-size:14px;font-weight:600;text-align:center;min-height:18px}
 
-/* ---- Scroll + installed-PWA / iOS safe areas ---- */
-/* A flex:1 child needs min-height:0 to actually scroll instead of growing. */
-.scroll{min-height:0}
-/* Horizontal strips (filter pills, card hand, draft/plan rows) should only pan
-   sideways, so a vertical swipe starting on them still scrolls the page. */
+/* ---- Natural-scroll shell (matches the Almanac; robust on iOS standalone) ----
+   The prototype was a fixed 390x844 frame with an inner scroll, which fights iOS
+   standalone's viewport (innerHeight is reported short of the physical screen, so
+   the shell can't reach the bottom). Convert to the proven pattern: the document
+   scrolls, the header is sticky, the tab bar is fixed to the bottom, and content
+   is padded so it clears the tab bar. */
+html,body{margin:0;min-height:100%;overscroll-behavior-y:none}
+#root{display:block !important;min-height:100vh;padding:0 !important}
+.dc-root{border-radius:0 !important;box-shadow:none !important}
+.app{width:auto !important;height:auto !important;min-height:100vh;max-width:520px;margin:0 auto;overflow:visible !important;position:static !important;display:block !important}
+
+/* Sticky header — stays put while the page scrolls under it. */
+.app > .row.between:first-child{position:sticky;top:0;z-index:40;background:#EEF0F3;padding-top:calc(12px + env(safe-area-inset-top)) !important;padding-bottom:8px !important}
+
+/* The view flows in the document (no inner scroller); pad the bottom to clear the fixed nav. */
+.scroll{display:flex;flex-direction:column;gap:14px;flex:none !important;overflow:visible !important;min-height:0;padding:12px 16px calc(88px + env(safe-area-inset-bottom)) !important}
+
+/* Fixed bottom nav, pinned to the true screen bottom (iOS handles this correctly
+   in natural-scroll mode, unlike the fixed-frame/overflow:hidden model). */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;max-width:520px;margin:0 auto;padding:6px 4px calc(10px + env(safe-area-inset-bottom)) !important}
+
+/* Overlays/sheets/toast anchor to the viewport, not the (now tall) document. */
+.overlay{position:fixed !important}
+.sheet{padding-bottom:calc(32px + env(safe-area-inset-bottom)) !important}
+.toast{position:fixed !important;top:calc(64px + env(safe-area-inset-top)) !important}
+
+/* Horizontal strips only pan sideways, so a vertical swipe still scrolls the page. */
 .filters,.hand{touch-action:pan-x}
 .hqlogin{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(24px + env(safe-area-inset-bottom))}
-@media (max-width:480px){
-  /* Lock the page; only the .scroll region scrolls. Anchor the app to the viewport
-     with position:fixed (explicit offsets, not the inset shorthand) so it fills the
-     standalone screen and the tab bar + scrolling work. */
-  html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
-  .app{position:fixed !important;top:0 !important;right:0 !important;bottom:0 !important;left:0 !important;width:auto !important;height:auto !important;box-sizing:border-box;padding-top:env(safe-area-inset-top)}
-  .scroll{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-  /* Base 8px gap above the home indicator; the inset reserves the indicator
-     itself. (The prototype's 22px was its own in-browser reserve — adding the
-     real inset on top of it left a too-tall band that lifted the tab bar.) */
-  .tabs{padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important}
-}
 
 /* ---- Dark theme (resolved to an explicit data-theme by app.js) ---- */
 :root[data-theme="dark"] html,:root[data-theme="dark"] body{background:#0d0f14}
 :root[data-theme="dark"] .app{background:#14161b;color:#eceef2}
+:root[data-theme="dark"] .app > .row.between:first-child{background:#14161b}
+:root[data-theme="dark"] html,:root[data-theme="dark"] body{background:#14161b}
 :root[data-theme="dark"] .card{background:#1f232b;box-shadow:0 1px 0 rgba(0,0,0,.4)}
 :root[data-theme="dark"] .card.target{box-shadow:0 0 0 3px #E08A45}
 :root[data-theme="dark"] .lbl{color:#9aa3b2}
