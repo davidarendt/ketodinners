@@ -194,6 +194,9 @@ html,body{margin:0;background:#D9DDE3}
 /* ---- Scroll + installed-PWA / iOS safe areas ---- */
 /* A flex:1 child needs min-height:0 to actually scroll instead of growing. */
 .scroll{min-height:0}
+/* Horizontal strips (filter pills, card hand, draft/plan rows) should only pan
+   sideways, so a vertical swipe starting on them still scrolls the page. */
+.filters,.hand{touch-action:pan-x}
 .hqlogin{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(24px + env(safe-area-inset-bottom))}
 @media (max-width:480px){
   /* Lock the page; only the .scroll region scrolls (keeps the tab bar fixed). */
