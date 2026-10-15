@@ -796,6 +796,7 @@ html,body{margin:0;background:#D9DDE3}
           <span class="mini">{{buildLabel}}</span>
         </div>
         <span class="mini" style="line-height: 1.45">{{installHint}}</span>
+        <span class="mini" style="font-family:monospace;font-size:11px;opacity:.75">{{diag}}</span>
         <sc-if value="{{canInstall}}" hint-placeholder-val="{{ true }}">
           <button class="btn pri full" onClick="{{installApp}}">Add to Home Screen</button>
         </sc-if>

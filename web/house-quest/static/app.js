@@ -7,7 +7,27 @@
 (function () {
   const { h, render, Component: PComponent } = preact;
   const API = "/api";
-  const HQ_BUILD = "8"; // bump on each front-end change so the installed app can show its version
+  const HQ_BUILD = "9"; // bump on each front-end change so the installed app can show its version
+
+  // Temporary on-device diagnostic: measure the real viewport/app/safe-area sizes.
+  function hqDiag() {
+    try {
+      var probe = document.getElementById("hq-ins-probe");
+      if (!probe) {
+        probe = document.createElement("div");
+        probe.id = "hq-ins-probe";
+        probe.style.cssText = "position:fixed;top:0;left:-9999px;height:env(safe-area-inset-bottom,0px);width:env(safe-area-inset-top,0px);pointer-events:none";
+        document.body.appendChild(probe);
+      }
+      var insB = probe.offsetHeight, insT = probe.offsetWidth;
+      var app = document.querySelector(".app");
+      var vv = window.visualViewport ? Math.round(window.visualViewport.height) : 0;
+      var appRect = app ? app.getBoundingClientRect() : null;
+      var standalone = (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true) ? "sa" : "br";
+      return "vh" + window.innerHeight + " vv" + vv + " appH" + (appRect ? Math.round(appRect.height) : 0) +
+        " appBot" + (appRect ? Math.round(appRect.bottom) : 0) + " insT" + insT + " insB" + insB + " " + standalone;
+    } catch (e) { return "diag-err"; }
+  }
 
   // ---- theme (resolve prefers-color-scheme to an explicit attribute) ----
   function applyTheme(t) { document.documentElement.dataset.theme = t; }
@@ -642,6 +662,7 @@
         themeOn: themeDark, themeCls: sw(themeDark), toggleTheme: () => { const cur = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; localStorage.setItem("hq_theme", cur); applyTheme(cur); if (this.__update) this.__update(); },
         isInstalled: isStandalone(), canInstall: !!deferredPrompt && !isStandalone(), installHint: installHintText(isStandalone()),
         buildLabel: "build " + HQ_BUILD,
+        diag: hqDiag(),
         installApp: () => {
           if (deferredPrompt) {
             deferredPrompt.prompt();
