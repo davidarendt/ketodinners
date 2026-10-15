@@ -7,7 +7,7 @@
 (function () {
   const { h, render, Component: PComponent } = preact;
   const API = "/api";
-  const HQ_BUILD = "9"; // bump on each front-end change so the installed app can show its version
+  const HQ_BUILD = "10"; // bump on each front-end change so the installed app can show its version
 
   // Temporary on-device diagnostic: measure the real viewport/app/safe-area sizes.
   function hqDiag() {
@@ -24,8 +24,11 @@
       var vv = window.visualViewport ? Math.round(window.visualViewport.height) : 0;
       var appRect = app ? app.getBoundingClientRect() : null;
       var standalone = (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true) ? "sa" : "br";
-      return "vh" + window.innerHeight + " vv" + vv + " appH" + (appRect ? Math.round(appRect.height) : 0) +
-        " appBot" + (appRect ? Math.round(appRect.bottom) : 0) + " insT" + insT + " insB" + insB + " " + standalone;
+      var tabs = document.querySelector(".tabs");
+      var tabB = tabs ? Math.round(tabs.getBoundingClientRect().bottom) : 0;
+      return "vh" + window.innerHeight + " vv" + vv + " scr" + (window.screen ? window.screen.height : 0) +
+        " dch" + document.documentElement.clientHeight + " appBot" + (appRect ? Math.round(appRect.bottom) : 0) +
+        " tabB" + tabB + " insT" + insT + " insB" + insB + " " + standalone;
     } catch (e) { return "diag-err"; }
   }
 
