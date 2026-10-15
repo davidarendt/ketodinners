@@ -7,7 +7,7 @@
 (function () {
   const { h, render, Component: PComponent } = preact;
   const API = "/api";
-  const HQ_BUILD = "10"; // bump on each front-end change so the installed app can show its version
+  const HQ_BUILD = "11"; // bump on each front-end change so the installed app can show its version
 
   // Temporary on-device diagnostic: measure the real viewport/app/safe-area sizes.
   function hqDiag() {
