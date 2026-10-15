@@ -7,6 +7,7 @@
 (function () {
   const { h, render, Component: PComponent } = preact;
   const API = "/api";
+  const HQ_BUILD = "8"; // bump on each front-end change so the installed app can show its version
 
   // ---- theme (resolve prefers-color-scheme to an explicit attribute) ----
   function applyTheme(t) { document.documentElement.dataset.theme = t; }
@@ -640,6 +641,7 @@
         handOpts: [3, 5, 7].map((n) => ({ n, cls: n === s.maxHand ? "sbtn on" : "sbtn", pick: () => this.act("update_household", { patch: { maxHand: n } }) })),
         themeOn: themeDark, themeCls: sw(themeDark), toggleTheme: () => { const cur = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; localStorage.setItem("hq_theme", cur); applyTheme(cur); if (this.__update) this.__update(); },
         isInstalled: isStandalone(), canInstall: !!deferredPrompt && !isStandalone(), installHint: installHintText(isStandalone()),
+        buildLabel: "build " + HQ_BUILD,
         installApp: () => {
           if (deferredPrompt) {
             deferredPrompt.prompt();
