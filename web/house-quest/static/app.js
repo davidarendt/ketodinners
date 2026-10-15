@@ -12,6 +12,16 @@
   function applyTheme(t) { document.documentElement.dataset.theme = t; }
   applyTheme(localStorage.getItem("hq_theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
 
+  // ---- auto-apply updates: when a new service worker takes control (after a
+  // deploy), reload so an installed PWA shows the new version on one reopen
+  // instead of two. Guarded so it reloads at most once. ----
+  if ("serviceWorker" in navigator) {
+    var __hqReloading = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (__hqReloading) return; __hqReloading = true; location.reload();
+    });
+  }
+
   // ---- PWA install prompt (captured for the Settings "Install the app" card) ----
   let deferredPrompt = null;
   window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; if (window.__hq) window.__hq.forceUpdate(); });
