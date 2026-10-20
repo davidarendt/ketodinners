@@ -23,6 +23,12 @@ exports.handler = async function handler() {
     const pending = (await H.get("/rest/v1/hq_notifications?select=*&pushed=is.false&order=id.asc&limit=50")) || [];
     let sent = 0, held = 0;
 
+    // Prefetch each user's subscriptions once (not per-notification).
+    const subsByUser = {};
+    for (const u of users) {
+      subsByUser[u.id] = (await H.get(`/rest/v1/hq_push_subs?select=endpoint,p256dh,auth&user_id=eq.${u.id}`)) || [];
+    }
+
     for (const n of pending) {
       const u = byName[n.to_user];
       if (!u) { await markPushed(n.id); continue; }
@@ -30,7 +36,7 @@ exports.handler = async function handler() {
       if (!prefs[n.category]) { await markPushed(n.id); continue; } // inbox-only
       if (u.quiet_hours && quietNow) { held++; continue; }          // hold until 7am
 
-      const subs = (await H.get(`/rest/v1/hq_push_subs?select=endpoint,p256dh,auth&user_id=eq.${u.id}`)) || [];
+      const subs = subsByUser[u.id] || [];
       const payload = JSON.stringify({ title: "House Quest", body: n.text, url: "/house-quest/" + (n.tab ? "#" + n.tab : "") });
       for (const sub of subs) {
         try {

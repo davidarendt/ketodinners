@@ -11,6 +11,6 @@ exports.handler = async function handler(event) {
     const state = await H.loadState(user.name);
     return H.jsonResponse(200, { state });
   } catch (err) {
-    return H.jsonResponse(503, { error: err.message || "Could not load state." });
+    return H.jsonResponse(503, { error: "Could not load state." });
   }
 };

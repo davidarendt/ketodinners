@@ -49,8 +49,7 @@ exports.handler = async function(event) {
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    return { statusCode: 503, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ error: 'Upload failed: ' + text }) };
+    return { statusCode: 503, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ error: 'Upload failed.' }) };
   }
 
   const publicUrl = `${url}/storage/v1/object/public/${BUCKET}/${objectPath}`;

@@ -3,108 +3,16 @@
 // extracted later. Reuses SUPABASE_URL / SUPABASE_ANON_KEY. Auth uses Node's
 // built-in crypto only (no dependencies): scrypt for passcodes, HMAC for tokens.
 
-const crypto = require("crypto");
+const crypto = require("crypto"); // used by newApiKey()
+const { jsonResponse, supabaseRequest } = require("./core-supabase");
+const { hashPasscode, verifyPasscode, makeAuth } = require("./auth");
 
-function jsonResponse(statusCode, payload) {
-  return {
-    statusCode,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
-    body: JSON.stringify(payload),
-  };
-}
-
-function supabaseConfig() {
-  const url = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
-  const anonKey = process.env.SUPABASE_ANON_KEY || "";
-  if (!url || !anonKey) throw new Error("Supabase not configured.");
-  return { url, anonKey };
-}
-
-async function supabaseRequest(method, restPath, body) {
-  const { url, anonKey } = supabaseConfig();
-  const headers = {
-    apikey: anonKey,
-    Authorization: `Bearer ${anonKey}`,
-    Accept: "application/json",
-  };
-  if (body) {
-    headers["Content-Type"] = "application/json";
-    headers.Prefer = restPath.includes("on_conflict=")
-      ? "resolution=merge-duplicates,return=representation"
-      : "return=representation";
-  }
-  const response = await fetch(`${url}${restPath}`, {
-    method,
-    headers,
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    const err = new Error(`Supabase request failed (${response.status}): ${text}`);
-    err.status = response.status;
-    err.body = text;
-    throw err;
-  }
-  if (response.status === 204) return null;
-  const text = await response.text();
-  return text ? JSON.parse(text) : null;
-}
-
-// ---------------------------------------------------------------- auth utils
-function b64url(buf) {
-  return Buffer.from(buf).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-function b64urlDecode(str) {
-  str = str.replace(/-/g, "+").replace(/_/g, "/");
-  while (str.length % 4) str += "=";
-  return Buffer.from(str, "base64");
-}
-
-function hashPasscode(passcode, saltHex) {
-  const salt = saltHex || crypto.randomBytes(16).toString("hex");
-  const hash = crypto.scryptSync(String(passcode), salt, 64).toString("hex");
-  return { salt, hash };
-}
-function verifyPasscode(passcode, saltHex, expectedHex) {
-  const { hash } = hashPasscode(passcode, saltHex);
-  const a = Buffer.from(hash, "hex");
-  const b = Buffer.from(expectedHex, "hex");
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
-}
-
-const TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
-
-function authSecret() {
-  const s = process.env.WEIGHT_AUTH_SECRET || "";
-  if (!s) throw new Error("WEIGHT_AUTH_SECRET not configured.");
-  return s;
-}
-function signToken(userId) {
-  const payload = b64url(JSON.stringify({ uid: userId, exp: Date.now() + TOKEN_TTL_MS }));
-  const sig = b64url(crypto.createHmac("sha256", authSecret()).update(payload).digest());
-  return `${payload}.${sig}`;
-}
-function verifyToken(token) {
-  if (!token || typeof token !== "string" || token.indexOf(".") < 0) return null;
-  const [payload, sig] = token.split(".");
-  const expected = b64url(crypto.createHmac("sha256", authSecret()).update(payload).digest());
-  const a = Buffer.from(sig || "");
-  const b = Buffer.from(expected);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
-  let data;
-  try { data = JSON.parse(b64urlDecode(payload).toString("utf8")); } catch { return null; }
-  if (!data || !data.uid || !data.exp || Date.now() > data.exp) return null;
-  return { uid: data.uid };
-}
-
-// Reads the bearer token from the request and returns { uid } or null.
-function authFromEvent(event) {
-  const headers = event.headers || {};
-  let token = headers["x-weight-token"] || headers["X-Weight-Token"] || "";
-  const authz = headers["authorization"] || headers["Authorization"] || "";
-  if (!token && /^Bearer /i.test(authz)) token = authz.replace(/^Bearer /i, "").trim();
-  return verifyToken(token);
-}
+// 90-day sessions; token sent as Bearer (or x-weight-token) using WEIGHT_AUTH_SECRET.
+const { signToken, verifyToken, authFromEvent } = makeAuth({
+  ttlMs: 90 * 24 * 60 * 60 * 1000,
+  headerName: "x-weight-token",
+  secretEnv: "WEIGHT_AUTH_SECRET",
+});
 
 // ---------------------------------------------------------------- validation
 function normalizeUsername(u) {

@@ -35,8 +35,7 @@ exports.handler = async function handler(event) {
     body: buffer,
   });
   if (!res.ok) {
-    const text = await res.text();
-    return H.jsonResponse(503, { error: "Upload failed: " + text });
+    return H.jsonResponse(503, { error: "Upload failed." });
   }
   return H.jsonResponse(200, { url: `${url}/storage/v1/object/public/${BUCKET}/${objectPath}` });
 };

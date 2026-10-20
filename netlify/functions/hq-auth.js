@@ -32,6 +32,6 @@ exports.handler = async function handler(event) {
     }
     return H.jsonResponse(200, { token: H.signToken(row.id), user: { id: row.id, name: row.name, username: row.username } });
   } catch (err) {
-    return H.jsonResponse(503, { error: err.message || "Login failed." });
+    return H.jsonResponse(503, { error: "Login failed." });
   }
 };

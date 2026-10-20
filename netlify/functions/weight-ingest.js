@@ -164,6 +164,6 @@ exports.handler = async function handler(event) {
     });
     return jsonResponse(200, { ok: true, entry });
   } catch (err) {
-    return jsonResponse(503, { error: err.message || "Save failed." });
+    return jsonResponse(503, { error: "Save failed." });
   }
 };

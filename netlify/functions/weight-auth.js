@@ -46,6 +46,6 @@ exports.handler = async function handler(event) {
     }
     return jsonResponse(200, { token: signToken(row.id), user: mapUser(row) });
   } catch (err) {
-    return jsonResponse(503, { error: err.message || "Auth failed." });
+    return jsonResponse(503, { error: "Auth failed." });
   }
 };

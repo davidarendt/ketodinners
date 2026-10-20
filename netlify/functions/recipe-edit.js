@@ -60,6 +60,6 @@ exports.handler = async function handler(event) {
     const saved = await upsertRecipeOverride(recipeId, patch);
     return jsonResponse(200, { recipeId, override: saved });
   } catch (err) {
-    return jsonResponse(503, { error: err.message || "Failed to save recipe override." });
+    return jsonResponse(503, { error: "Failed to save recipe override." });
   }
 };

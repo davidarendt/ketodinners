@@ -453,7 +453,7 @@ exports.handler = async function handler(event) {
     return H.jsonResponse(200, { state, flash: result.flash || "", reveal: result.reveal || null });
   } catch (err) {
     if (err.code === 400) return H.jsonResponse(400, { error: err.message });
-    return H.jsonResponse(503, { error: err.message || "Action failed." });
+    return H.jsonResponse(503, { error: "Action failed." });
   }
 };
 

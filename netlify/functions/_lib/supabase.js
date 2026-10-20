@@ -1,50 +1,6 @@
-function jsonResponse(statusCode, payload) {
-  return {
-    statusCode,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
-    body: JSON.stringify(payload),
-  };
-}
-
-function supabaseConfig() {
-  const url = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
-  const anonKey = process.env.SUPABASE_ANON_KEY || "";
-  return { url, anonKey };
-}
-
-function assertSupabaseConfigured() {
-  const cfg = supabaseConfig();
-  if (!cfg.url || !cfg.anonKey) {
-    throw new Error("Supabase not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.");
-  }
-  return cfg;
-}
-
-async function supabaseRequest(method, restPath, body) {
-  const { url, anonKey } = assertSupabaseConfigured();
-  const headers = {
-    apikey: anonKey,
-    Authorization: `Bearer ${anonKey}`,
-    Accept: "application/json",
-  };
-  if (body) {
-    headers["Content-Type"] = "application/json";
-    headers.Prefer =
-      restPath.includes("on_conflict=") ? "resolution=merge-duplicates,return=representation" : "return=representation";
-  }
-  const response = await fetch(`${url}${restPath}`, {
-    method,
-    headers,
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Supabase request failed (${response.status}): ${text}`);
-  }
-  if (response.status === 204) return null;
-  const text = await response.text();
-  return text ? JSON.parse(text) : null;
-}
+// Recipe data layer for the Dinner Planner. HTTP + Supabase REST wrappers are
+// shared via _lib/core-supabase.js; this file holds the recipe-specific queries.
+const { jsonResponse, supabaseRequest } = require("./core-supabase");
 
 async function fetchRecipeStates(recipeIds) {
   if (!recipeIds.length) return {};

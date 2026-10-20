@@ -16,6 +16,6 @@ exports.handler = async function handler() {
     }
     return jsonResponse(200, { states });
   } catch (err) {
-    return jsonResponse(503, { error: err.message || "Recipe states unavailable." });
+    return jsonResponse(503, { error: "Recipe states unavailable." });
   }
 };

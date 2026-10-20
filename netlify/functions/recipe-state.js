@@ -61,6 +61,6 @@ exports.handler = async function handler(event) {
     const state = await upsertRecipeState(recipeId, { rating, completed, teddyApproved, ease });
     return jsonResponse(200, { recipeId, state });
   } catch (err) {
-    return jsonResponse(503, { error: err.message || "Failed to save recipe state." });
+    return jsonResponse(503, { error: "Failed to save recipe state." });
   }
 };

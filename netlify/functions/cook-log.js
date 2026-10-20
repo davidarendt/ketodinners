@@ -16,7 +16,7 @@ exports.handler = async function handler(event) {
       await logCook(recipeId);
       return jsonResponse(200, await cookSummary(recipeId));
     } catch (err) {
-      return jsonResponse(503, { error: err.message || "Failed to log cook." });
+      return jsonResponse(503, { error: "Failed to log cook." });
     }
   }
 
@@ -29,7 +29,7 @@ exports.handler = async function handler(event) {
       await deleteLastCook(id);
       return jsonResponse(200, await cookSummary(recipeId));
     } catch (err) {
-      return jsonResponse(503, { error: err.message || "Failed to undo cook." });
+      return jsonResponse(503, { error: "Failed to undo cook." });
     }
   }
 

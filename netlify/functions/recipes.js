@@ -34,6 +34,6 @@ exports.handler = async function handler() {
     });
     return jsonResponse(200, { recipes });
   } catch (err) {
-    return jsonResponse(500, { error: err.message || "Failed to load recipes." });
+    return jsonResponse(500, { error: "Failed to load recipes." });
   }
 };

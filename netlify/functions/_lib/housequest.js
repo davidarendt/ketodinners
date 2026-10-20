@@ -6,95 +6,19 @@
 // randomness (card draws, wildcard, drops); the phones render from loadState()
 // and send actions through applyAction().
 
-const crypto = require("crypto");
-
-// ------------------------------------------------------------------ http
-function jsonResponse(statusCode, payload) {
-  return {
-    statusCode,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
-    body: JSON.stringify(payload),
-  };
-}
-
-function supabaseConfig() {
-  const url = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
-  const anonKey = process.env.SUPABASE_ANON_KEY || "";
-  if (!url || !anonKey) throw new Error("Supabase not configured.");
-  return { url, anonKey };
-}
-
-async function sb(method, restPath, body) {
-  const { url, anonKey } = supabaseConfig();
-  const headers = { apikey: anonKey, Authorization: `Bearer ${anonKey}`, Accept: "application/json" };
-  if (body) {
-    headers["Content-Type"] = "application/json";
-    headers.Prefer = restPath.includes("on_conflict=")
-      ? "resolution=merge-duplicates,return=representation"
-      : "return=representation";
-  }
-  const res = await fetch(`${url}${restPath}`, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
-  if (!res.ok) {
-    const text = await res.text();
-    const err = new Error(`Supabase ${method} ${restPath} failed (${res.status}): ${text}`);
-    err.status = res.status; err.body = text;
-    throw err;
-  }
-  if (res.status === 204) return null;
-  const text = await res.text();
-  return text ? JSON.parse(text) : null;
-}
+// ------------------------------------------------------------------ http + auth
+const { jsonResponse, supabaseRequest: sb } = require("./core-supabase");
 const get = (path) => sb("GET", path);
+const { b64url, b64urlDecode, hashPasscode, verifyPasscode, makeAuth } = require("./auth");
 
-// ------------------------------------------------------------------ auth
-function b64url(buf) {
-  return Buffer.from(buf).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-function b64urlDecode(str) {
-  str = str.replace(/-/g, "+").replace(/_/g, "/");
-  while (str.length % 4) str += "=";
-  return Buffer.from(str, "base64");
-}
-function hashPasscode(passcode, saltHex) {
-  const salt = saltHex || crypto.randomBytes(16).toString("hex");
-  const hash = crypto.scryptSync(String(passcode), salt, 64).toString("hex");
-  return { salt, hash };
-}
-function verifyPasscode(passcode, saltHex, expectedHex) {
-  if (!saltHex || !expectedHex) return false;
-  const { hash } = hashPasscode(passcode, saltHex);
-  const a = Buffer.from(hash, "hex"), b = Buffer.from(expectedHex, "hex");
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
-}
-const TOKEN_TTL_MS = 180 * 24 * 60 * 60 * 1000; // 180 days
-function authSecret() {
-  const s = process.env.HQ_AUTH_SECRET || process.env.WEIGHT_AUTH_SECRET || "";
-  if (!s) throw new Error("HQ_AUTH_SECRET not configured.");
-  return s;
-}
-function signToken(userId) {
-  const payload = b64url(JSON.stringify({ uid: userId, exp: Date.now() + TOKEN_TTL_MS }));
-  const sig = b64url(crypto.createHmac("sha256", authSecret()).update(payload).digest());
-  return `${payload}.${sig}`;
-}
-function verifyToken(token) {
-  if (!token || typeof token !== "string" || token.indexOf(".") < 0) return null;
-  const [payload, sig] = token.split(".");
-  const expected = b64url(crypto.createHmac("sha256", authSecret()).update(payload).digest());
-  const a = Buffer.from(sig || ""), b = Buffer.from(expected);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
-  let data;
-  try { data = JSON.parse(b64urlDecode(payload).toString("utf8")); } catch { return null; }
-  if (!data || !data.uid || !data.exp || Date.now() > data.exp) return null;
-  return { uid: data.uid };
-}
-function authFromEvent(event) {
-  const headers = event.headers || {};
-  let token = headers["x-hq-token"] || headers["X-HQ-Token"] || "";
-  const authz = headers["authorization"] || headers["Authorization"] || "";
-  if (!token && /^Bearer /i.test(authz)) token = authz.replace(/^Bearer /i, "").trim();
-  return verifyToken(token);
-}
+// 180-day sessions; token sent as Bearer (or x-hq-token). Uses HQ_AUTH_SECRET,
+// falling back to WEIGHT_AUTH_SECRET. Token format is identical to before.
+const { signToken, verifyToken, authFromEvent } = makeAuth({
+  ttlMs: 180 * 24 * 60 * 60 * 1000,
+  headerName: "x-hq-token",
+  secretEnv: "HQ_AUTH_SECRET",
+  secretFallback: "WEIGHT_AUTH_SECRET",
+});
 
 // ------------------------------------------------------------------ constants
 // Wildcard deck, surprise-drop reasons, holidays, level names — content/logic

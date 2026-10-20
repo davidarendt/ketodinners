@@ -49,6 +49,6 @@ exports.handler = async function handler(event) {
 
     return jsonResponse(405, { error: "Method not allowed." });
   } catch (err) {
-    return jsonResponse(503, { error: err.message || "Push request failed." });
+    return jsonResponse(503, { error: "Push request failed." });
   }
 };
