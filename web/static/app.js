@@ -150,6 +150,7 @@ function renderEase(recipeId) {
     var btn = document.createElement('button');
     btn.className = 'ease-btn ease-' + i + (i === ease ? ' lit' : '');
     btn.title = EASE_LABELS[i];
+    btn.setAttribute('aria-label', 'Ease: ' + EASE_LABELS[i]);
     var val = i;
     btn.addEventListener('click', (function(v) {
       return function(e) {
@@ -236,6 +237,8 @@ function renderSelect(recipeId) {
   b.className = 'sel-box' + (selected.has(recipeId) ? ' on' : '');
   b.dataset.recipeId = recipeId;
   b.title = 'Add to shopping list';
+  b.setAttribute('aria-label', 'Add to shopping list');
+  b.setAttribute('aria-pressed', selected.has(recipeId) ? 'true' : 'false');
   b.addEventListener('click', function(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -248,7 +251,7 @@ function renderSelect(recipeId) {
 }
 function updateAllSelect(recipeId) {
   var on = selected.has(recipeId);
-  document.querySelectorAll('.sel-box[data-recipe-id="' + recipeId + '"]').forEach(function(b) { b.classList.toggle('on', on); });
+  document.querySelectorAll('.sel-box[data-recipe-id="' + recipeId + '"]').forEach(function(b) { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
   document.querySelectorAll('a.meal-row[data-recipe-id="' + recipeId + '"]').forEach(function(r) { r.classList.toggle('selected', on); });
 }
 function clearSelection() {
@@ -411,6 +414,7 @@ function renderShopping(el, data) {
         lk.target = 'walmartShop';
         lk.rel = 'noopener';
         lk.title = 'Search on Walmart';
+        lk.setAttribute('aria-label', 'Search "' + text + '" on Walmart');
         lk.textContent = '🔍';
         row.appendChild(chk);
         row.appendChild(t);
@@ -668,6 +672,7 @@ function renderBrowse() {
   var input = document.createElement('input');
   input.type = 'search';
   input.placeholder = 'Search ' + recipes.length + ' dinners';
+  input.setAttribute('aria-label', 'Search dinners');
   search.appendChild(input);
 
   var filterBar = document.createElement('div');
@@ -679,14 +684,23 @@ function renderBrowse() {
     list.appendChild(makeDishCard(r));
   });
 
+  var emptyMsg = document.createElement('p');
+  emptyMsg.className = 'browse-empty';
+  emptyMsg.hidden = true;
+  emptyMsg.textContent = 'No dinners match that search.';
+
   var curProtein = 'all';
   function apply() {
     var q = (input.value || '').toLowerCase().trim();
+    var shown = 0;
     list.querySelectorAll('.dish-card').forEach(function(c) {
       var okP = (curProtein === 'all' || c.dataset.protein === curProtein);
       var okQ = (!q || c.dataset.title.indexOf(q) >= 0);
-      c.style.display = (okP && okQ) ? '' : 'none';
+      var vis = okP && okQ;
+      c.style.display = vis ? '' : 'none';
+      if (vis) shown++;
     });
+    emptyMsg.hidden = shown > 0;
   }
   input.addEventListener('input', apply);
 
@@ -706,6 +720,7 @@ function renderBrowse() {
   el.appendChild(search);
   el.appendChild(filterBar);
   el.appendChild(list);
+  el.appendChild(emptyMsg);
 }
 
 function showView(name) {

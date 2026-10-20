@@ -139,7 +139,7 @@
     var n = data.length;
     var X = function (i) { return padL + (n === 1 ? pw / 2 : (i / (n - 1)) * pw); };
     var Y = function (v) { return padT + (mx - v) / (mx - mn) * ph; };
-    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet">';
+    var s = '<svg aria-hidden="true" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet">';
     for (var g = 0; g <= 3; g++) {
       var gv = mx - g * (mx - mn) / 3, gy = Y(gv);
       s += '<line x1="' + padL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + gy.toFixed(1) + '" stroke="#292524" stroke-dasharray="2 3"/>';
@@ -166,7 +166,7 @@
   function progressRing(pct) {
     pct = Math.max(0, Math.min(100, pct || 0));
     var S = 92, r = 38, c = S / 2, C = 2 * Math.PI * r, off = C * (1 - pct / 100);
-    return '<svg viewBox="0 0 ' + S + ' ' + S + '" width="92" height="92">' +
+    return '<svg aria-hidden="true" viewBox="0 0 ' + S + ' ' + S + '" width="92" height="92">' +
       '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke="#292524" stroke-width="7"/>' +
       '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke="#34d399" stroke-width="7" stroke-linecap="round" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '" transform="rotate(-90 ' + c + ' ' + c + ')"/>' +
       '<text x="' + c + '" y="' + (c - 1) + '" text-anchor="middle" dominant-baseline="middle" fill="#f5f5f4" font-size="21" font-family="' + DISP + '">' + Math.round(pct) + '</text>' +
@@ -177,7 +177,7 @@
     if (!values || values.length < 2) return '';
     var W = 100, H = 24, mn = Math.min.apply(null, values), mx = Math.max.apply(null, values), pad = (mx - mn) * 0.12 || 1; mn -= pad; mx += pad;
     var pts = values.map(function (v, i) { return ((i / (values.length - 1)) * W).toFixed(1) + ',' + (H - (v - mn) / (mx - mn) * H).toFixed(1); }).join(' ');
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="24" preserveAspectRatio="none"><polyline points="' + pts + '" fill="none" stroke="' + (color || '#a3d9a5') + '" stroke-width="1.4"/></svg>';
+    return '<svg aria-hidden="true" viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="24" preserveAspectRatio="none"><polyline points="' + pts + '" fill="none" stroke="' + (color || '#a3d9a5') + '" stroke-width="1.4"/></svg>';
   }
 
   function barChart(bars) {
@@ -186,7 +186,7 @@
     if (vals.length < 2) return '<div class="empty">Not enough data yet.</div>';
     var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), pad = (mx - mn) * 0.12 || 1; mn -= pad; mx += pad;
     var n = bars.length, bw = (pw / n) * 0.6;
-    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet">';
+    var s = '<svg aria-hidden="true" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet">';
     for (var g = 0; g <= 2; g++) { var gv = mx - g * (mx - mn) / 2, gy = padT + g * ph / 2;
       s += '<text x="' + (padL - 4) + '" y="' + (gy + 2.8).toFixed(1) + '" text-anchor="end" fill="#78716c" font-size="8" font-family="' + MONO + '">' + gv.toFixed(0) + '</text>'; }
     bars.forEach(function (b, i) {
@@ -202,7 +202,7 @@
     var weeks = 18, cell = 11, gap = 3, W = weeks * (cell + gap) - gap, H = 7 * (cell + gap) - gap;
     var today = new Date(); today.setHours(0, 0, 0, 0);
     var start = new Date(today); start.setDate(start.getDate() - (weeks * 7 - 1));
-    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="auto" preserveAspectRatio="xMinYMin meet">';
+    var s = '<svg aria-hidden="true" viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="auto" preserveAspectRatio="xMinYMin meet">';
     var d = new Date(start);
     for (var i = 0; i < weeks * 7; i++) {
       var col = Math.floor(i / 7), row = i % 7, has = dateSet.has(isoOf(d));

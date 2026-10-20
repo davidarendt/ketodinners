@@ -194,7 +194,7 @@ html,body{margin:0;background:#D9DDE3}
 .hqwho{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .hqwhobtn{font:inherit;font-weight:700;font-size:16px;min-height:52px;border-radius:14px;border:2px solid #D3D8E1;background:#fff;color:#1B1F27;cursor:pointer}
 .hqwhobtn.on{border-color:#2F5BEA;background:#EEF3FF;color:#1F3FB0}
-.hqhint{margin:0;font-size:12px;color:#8A8F9A;text-align:center}
+.hqhint{margin:0;font-size:12px;color:#5A6170;text-align:center}
 .hqerr{margin:0;color:#B8520F;font-size:14px;font-weight:600;text-align:center;min-height:18px}
 
 /* ---- Natural-scroll shell (matches the Almanac; robust on iOS standalone) ----
@@ -226,6 +226,14 @@ html,body{margin:0;min-height:100%;overscroll-behavior-y:none}
 /* Horizontal strips only pan sideways, so a vertical swipe still scrolls the page. */
 .filters,.hand{touch-action:pan-x}
 .hqlogin{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+
+/* Accessibility: visible keyboard focus + respect reduced-motion (the card-reveal
+   flip is a large 3D animation — a real vestibular concern). */
+:focus-visible{outline:3px solid #2F5BEA;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+  .revealcard{animation:none !important}
+}
 
 /* ---- Dark theme (resolved to an explicit data-theme by app.js) ---- */
 :root[data-theme="dark"] .app{background:#14161b;color:#eceef2}
