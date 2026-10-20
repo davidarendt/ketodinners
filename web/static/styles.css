@@ -186,3 +186,11 @@ body.has-cart-bar #main{padding-bottom:calc(150px + env(safe-area-inset-bottom))
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important}
 }
+
+/* ---- Larger touch targets for the dense rotation/shopping controls.
+   The visual size stays the same; an invisible ::before expands the hit area
+   to ~full row height. Horizontal expansion is kept small on the star/ease
+   clusters (which sit side by side) so you don't mis-tap a neighbor. ---- */
+.sel-box,.teddy-btn,.done-btn,.have-box,.star,.ease-btn{position:relative}
+.sel-box::before,.teddy-btn::before,.done-btn::before,.have-box::before{content:'';position:absolute;top:-12px;bottom:-12px;left:-7px;right:-7px}
+.star::before,.ease-btn::before{content:'';position:absolute;top:-13px;bottom:-13px;left:-1px;right:-1px}

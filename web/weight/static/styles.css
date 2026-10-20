@@ -2,7 +2,7 @@
    Dark stone ground; contrast from size + color, never weight. */
 :root{
   --bg:#0c0a09; --surface:#1c1917; --surface-2:#232020; --surface-alt:#292524;
-  --t-primary:#f5f5f4; --t-body:#e7e5e4; --t-muted:#a8a29e; --t-label:#78716c; --t-faint:#57534e; --t-300:#d6d3d1;
+  --t-primary:#f5f5f4; --t-body:#e7e5e4; --t-muted:#a8a29e; --t-label:#9a948d; --t-faint:#8a847d; --t-300:#d6d3d1;
   --border:#292524; --border-strong:#44403c;
   --good:#34d399; --good-dim:#6ee7b7; --caution:#fbbf24; --warning:#fb923c; --alert:#f87171;
   --chart-line:#a3d9a5; --chart-daily:#57534e; --goal:#d4a056; --accent:#a3d9a5;
