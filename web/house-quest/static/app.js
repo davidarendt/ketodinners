@@ -7,7 +7,7 @@
 (function () {
   const { h, render, Component: PComponent } = preact;
   const API = "/api";
-  const HQ_BUILD = "13"; // bump on each front-end change so the installed app can show its version
+  const HQ_BUILD = "14"; // bump on each front-end change so the installed app can show its version
 
   // ---- theme (resolve prefers-color-scheme to an explicit attribute) ----
   function applyTheme(t) { document.documentElement.dataset.theme = t; }
@@ -593,7 +593,7 @@
         holidays, holidaysOn: s.holidaysOn, dropsOn: s.dropsOn, wildOn: s.wildOn, rolloverOn: s.rollover, seasonOn: s.seasonOn,
 
         isBoard: s.tab === "board", isPitches: s.tab === "pitches", isAdd: s.tab === "add", isEvent: s.tab === "event", isSettings: s.tab === "settings", isTrophies: s.tab === "trophies",
-        tabCls: { board: tab("board"), pitches: tab("pitches"), add: tab("add"), event: tab("event"), trophies: tab("trophies") },
+        tabCls: { board: tab("board"), pitches: tab("pitches"), add: tab("add"), cards: tab("cards"), event: tab("event"), trophies: tab("trophies") },
         gearCls: s.tab === "settings" ? "iconbtn on" : "iconbtn",
         goBoard: () => this.setLocal({ tab: "board" }), goPitches: () => this.setLocal({ tab: "pitches" }),
         goAdd: () => this.setLocal({ tab: "add", selCard: null }), goEvent: () => this.setLocal({ tab: "event", selCard: null }),
