@@ -8,11 +8,17 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="House Quest">
+<meta name="description" content="A two-player house-upgrade game — pitch, vote, budget, draft and finish home upgrades together.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="House Quest">
+<meta property="og:description" content="Plan, budget and build the house — together. A two-player upgrade game.">
+<meta property="og:image" content="/house-quest/icons/icon-512.png">
 <link rel="manifest" href="/house-quest/manifest.json">
 <link rel="apple-touch-icon" href="/house-quest/icons/apple-touch-icon.png">
 <link rel="icon" href="/house-quest/icons/favicon.ico">
 <title>House Quest</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&amp;family=DM+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
 <style>
 body{margin:0}
@@ -222,10 +228,9 @@ html,body{margin:0;min-height:100%;overscroll-behavior-y:none}
 .hqlogin{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(24px + env(safe-area-inset-bottom))}
 
 /* ---- Dark theme (resolved to an explicit data-theme by app.js) ---- */
-:root[data-theme="dark"] html,:root[data-theme="dark"] body{background:#0d0f14}
 :root[data-theme="dark"] .app{background:#14161b;color:#eceef2}
 :root[data-theme="dark"] .app > .row.between:first-child{background:#14161b}
-:root[data-theme="dark"] html,:root[data-theme="dark"] body{background:#14161b}
+:root[data-theme="dark"] body{background:#14161b}
 :root[data-theme="dark"] .card{background:#1f232b;box-shadow:0 1px 0 rgba(0,0,0,.4)}
 :root[data-theme="dark"] .card.target{box-shadow:0 0 0 3px #E08A45}
 :root[data-theme="dark"] .lbl{color:#9aa3b2}
@@ -808,7 +813,6 @@ html,body{margin:0;min-height:100%;overscroll-behavior-y:none}
           <span class="mini">{{buildLabel}}</span>
         </div>
         <span class="mini" style="line-height: 1.45">{{installHint}}</span>
-        <span class="mini" style="font-family:monospace;font-size:11px;opacity:.75">{{diag}}</span>
         <sc-if value="{{canInstall}}" hint-placeholder-val="{{ true }}">
           <button class="btn pri full" onClick="{{installApp}}">Add to Home Screen</button>
         </sc-if>

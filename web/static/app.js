@@ -747,10 +747,9 @@ function init() {
     renderBrowse();
     updateCartBar();
     showView('mealplan');
-  }).catch(function(err) {
+  }).catch(function() {
     var msg = document.getElementById('loadingMsg');
-    if (msg) msg.textContent = 'Failed to load recipes.';
-    console.error(err);
+    if (msg) msg.textContent = 'Failed to load recipes. Please refresh.';
   });
 }
 

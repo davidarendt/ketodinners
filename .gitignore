@@ -17,3 +17,10 @@ node_modules/
 Thumbs.db
 .vscode/
 .netlify/
+
+# Tooling / scratch artifacts
+.playwright-mcp/
+.claude/
+hq-*.png
+scratch_*.txt
+*.zip
