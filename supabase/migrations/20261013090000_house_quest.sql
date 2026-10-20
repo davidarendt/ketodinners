@@ -157,6 +157,7 @@ create table if not exists public.hq_drafts (
   status       text not null default 'open',      -- open / finished / locked
   passed       jsonb not null default '{"David":false,"Anne":false}'::jsonb,
   locked       jsonb not null default '{"David":false,"Anne":false}'::jsonb,
+  allocations  jsonb not null default '{}'::jsonb,   -- shared free-allocation: { upgradeId: amount }
   created_at   timestamptz not null default now()
 );
 

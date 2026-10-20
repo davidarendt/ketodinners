@@ -39,7 +39,7 @@ exports.handler = async function handler() {
     // weekly wrap-up (counts finished this month, like the prototype recap)
     const done = (await H.get(`/rest/v1/hq_upgrades?select=done_month&status=eq.done`)) || [];
     const finishedThisMonth = done.filter((d) => d.done_month === H.monthShort()).length;
-    const msg = `New week at the house. ${H.money(budget)} landed and this week’s draft is open. ${finishedThisMonth} finished this month so far.`;
+    const msg = `New week at the house. ${H.money(budget)} landed — time to allocate it together. ${finishedThisMonth} finished this month so far.`;
     await H.notify("David", "recap", msg, null, "draft");
     await H.notify("Anne", "recap", msg, null, "draft");
 

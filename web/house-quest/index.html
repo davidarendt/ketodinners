@@ -354,7 +354,7 @@ html,body{margin:0;min-height:100%;overscroll-behavior-y:none}
 
       <sc-if value="{{drOpen}}" hint-placeholder-val="{{ true }}">
         <div class="card" style="gap: 8px; box-shadow: 0 0 0 3px #2F5BEA">
-          <span class="lbl" style="color: #1F3FB0">This week's draft is open</span>
+          <span class="lbl" style="color: #1F3FB0">This week's money to allocate</span>
           <span style="font-size: 16px; font-weight: 500; line-height: 1.4">{{drBanner}}</span>
           <button class="btn pri full" onClick="{{goDraft}}">{{drCta}}</button>
         </div>
@@ -1002,7 +1002,7 @@ html,body{margin:0;min-height:100%;overscroll-behavior-y:none}
   <sc-if value="{{isDraft}}" hint-placeholder-val="{{ false }}">
     <div class="scroll">
       <div class="row between" style="padding: 6px 2px 0">
-        <span class="disp" style="font-size: 20px; font-weight: 800">This week's draft</span>
+        <span class="disp" style="font-size: 20px; font-weight: 800">This week's money</span>
         <button class="btn ghost sm" onClick="{{goBoard}}">Done</button>
       </div>
       <div class="card dark" style="gap: 8px">
@@ -1014,41 +1014,45 @@ html,body{margin:0;min-height:100%;overscroll-behavior-y:none}
         <div class="meter"><div class="fill" style="width: {{drUsedPct}}%"></div></div>
         <span style="font-size: 15px; font-weight: 700">{{drStatus}}</span>
       </div>
-      <span class="mini" style="padding: 0 2px; line-height: 1.45">Take turns drafting upgrades in snake order. The higher an upgrade ranks, the more of its cost you can put toward it this week: #1 gets up to 100%, each spot down gets 15% less, bottoming out at 15%. Want something ranked low? Draft it anyway, it just gets less. Champion cards move things up.</span>
+      <span class="mini" style="padding: 0 2px; line-height: 1.45">Put this week's money toward any upgrades, together — no turns. Use − / + / Max to set how much goes into each one. When you're both happy, you both lock it in and the money moves into each upgrade's savings jar.</span>
 
       <sc-for list="{{drOptions}}" as="o" hint-placeholder-count="5">
         <div class="card" style="gap: 8px">
-          <div class="row" style="gap: 12px; align-items: flex-start">
-            <span class="disp" style="font-size: 22px; font-weight: 800; min-width: 38px">#{{o.rank}}</span>
+          <div class="row between" style="align-items: flex-start">
             <div class="col" style="flex: 1">
               <span style="font-weight: 700; font-size: 16px">{{o.title}}</span>
-              <span class="mini">Score {{o.score}} · costs {{o.costFmt}} · up to {{o.multPct}}% this week</span>
+              <span class="mini">{{o.sub}}</span>
             </div>
+            <span class="disp" style="font-size: 20px; font-weight: 800">{{o.allocFmt}}</span>
           </div>
-          <sc-if value="{{o.picked}}" hint-placeholder-val="{{ false }}"><span class="chip ready" style="align-self: flex-start">{{o.pickedLabel}}</span></sc-if>
-          <sc-if value="{{o.canPick}}" hint-placeholder-val="{{ true }}"><button class="btn pri full" onClick="{{o.pick}}">Draft it · {{o.amtFmt}}</button></sc-if>
-          <sc-if value="{{o.showCap}}" hint-placeholder-val="{{ false }}"><span class="mini">Would get {{o.amtFmt}}</span></sc-if>
+          <div class="meter"><div class="fill save" style="width: {{o.pct}}%"></div></div>
+          <div class="row">
+            <button class="btn sm" onClick="{{o.minus}}">− $25</button>
+            <button class="btn sm" onClick="{{o.plus}}">+ $25</button>
+            <button class="btn sm" style="margin-left: auto" onClick="{{o.max}}">Max</button>
+          </div>
         </div>
       </sc-for>
-
-      <sc-if value="{{drCanPass}}" hint-placeholder-val="{{ true }}">
-        <button class="btn full" onClick="{{drPass}}">I'm done picking</button>
+      <sc-if value="{{drEmpty}}" hint-placeholder-val="{{ false }}">
+        <div class="card"><span class="mini">Nothing on the board to fund yet. Approve some pitches first.</span></div>
       </sc-if>
 
-      <sc-if value="{{drShowPlan}}" hint-placeholder-val="{{ false }}">
-        <div class="card" style="gap: 10px">
-          <span class="lbl">The plan</span>
-          <sc-for list="{{drPicks}}" as="p" hint-placeholder-count="3">
-            <div class="row between"><span style="font-size: 15px">{{p.title}}</span><span class="mini">{{p.who}} · {{p.amtFmt}}</span></div>
-          </sc-for>
-          <div class="divider"></div>
-          <div class="row between"><span style="font-weight: 700">Total planned</span><span style="font-weight: 700">{{drPickedFmt}}</span></div>
-          <span class="mini">David: {{drLockD}} · Anne: {{drLockA}}</span>
-          <sc-if value="{{drCanLock}}" hint-placeholder-val="{{ true }}">
-            <button class="btn warm full" onClick="{{drLock}}">Lock it in</button>
-          </sc-if>
-        </div>
-      </sc-if>
+      <div class="card" style="gap: 10px">
+        <span class="lbl">The plan</span>
+        <sc-for list="{{drPicks}}" as="p" hint-placeholder-count="2">
+          <div class="row between"><span style="font-size: 15px">{{p.title}}</span><span class="mini">{{p.amtFmt}}</span></div>
+        </sc-for>
+        <sc-if value="{{drNoPicks}}" hint-placeholder-val="{{ true }}"><span class="mini">Nothing allocated yet.</span></sc-if>
+        <div class="divider"></div>
+        <div class="row between"><span style="font-weight: 700">Total set aside</span><span style="font-weight: 700">{{drPickedFmt}}</span></div>
+        <span class="mini">David: {{drLockD}} · Anne: {{drLockA}}</span>
+        <sc-if value="{{drCanLock}}" hint-placeholder-val="{{ true }}">
+          <button class="btn warm full" onClick="{{drLock}}">Lock it in</button>
+        </sc-if>
+        <sc-if value="{{drLockedByMe}}" hint-placeholder-val="{{ false }}">
+          <span class="mini">You've locked in. Waiting on your partner.</span>
+        </sc-if>
+      </div>
     </div>
   </sc-if>
 
@@ -1408,10 +1412,10 @@ html,body{margin:0;min-height:100%;overscroll-behavior-y:none}
       </div>
 
       <div class="card">
-        <span class="lbl">The weekly draft</span>
+        <span class="lbl">Allocating the money</span>
         <span class="mini" style="line-height:1.6">
-          The draft opens with each deposit. You pick in <b>snake order</b> (A, B, B, A…), and the first pick alternates every week.<br><br>
-          The higher an upgrade ranks, the bigger the share of its cost you can put toward it this week: <b>#1 up to 100%</b>, each spot down 15% less, bottoming out at 15%. You can still draft low-ranked items — they just get less. Both of you tap <b>Lock it in</b> to confirm.
+          Each deposit opens a shared allocation — no turns. On the <b>This week's money</b> screen, either of you puts cash toward any upgrade with <b>− / + / Max</b> (up to what the upgrade still needs, and what's left in the pool). Edits sync to both phones.<br><br>
+          When you're both happy, you <b>both lock it in</b> and the money moves into each upgrade's savings jar. Changing an allocation clears both locks, so you re-confirm together.
         </span>
       </div>
 

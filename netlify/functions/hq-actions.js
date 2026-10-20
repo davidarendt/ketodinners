@@ -201,53 +201,46 @@ async function applyAction(me, action, body) {
       break;
     }
 
-    // ----------------------------------------------------------- draft
-    case "draft_pick": {
+    // ------------------------------------------------- allocation session
+    // Free shared allocation: either person sets how much of the weekly pool goes
+    // toward any upgrade (capped at the upgrade's remaining cost and the pool).
+    // Any change resets both locks; both must lock in to move money into jars.
+    case "alloc_set": {
       const row = await getDraftRow(); if (!row || row.status !== "open") break;
-      const q = H.rankedQueue(s.items, s.seasonOn, s.season);
-      const idx = q.findIndex((x) => String(x.id) === String(body.upgradeId));
-      if (idx < 0) break;
-      const rank = idx + 1, mult = Math.max(0.15, 1 - 0.15 * (rank - 1));
-      const picks = (await H.get(`/rest/v1/hq_draft_picks?select=*&draft_id=eq.${row.id}&order=pick_no.asc`)) || [];
-      if (picks.some((p) => String(p.upgrade_id) === String(body.upgradeId))) break;
+      const it = findItem(s, body.upgradeId); if (!it) break;
       const poolFrozen = row.pool != null ? Number(row.pool) : Math.max(0, available);
-      const used = picks.reduce((t, p) => t + Number(p.amount), 0);
-      const drLeft = Math.max(0, poolFrozen - used);
-      const it = q[idx];
-      const amt = Math.round(Math.min(it.cost * mult, Math.max(0, it.cost - (it.saved || 0)), drLeft));
-      if (amt <= 0) break;
-      await H.sb("POST", "/rest/v1/hq_draft_picks", { draft_id: row.id, upgrade_id: it.id, who: me, amount: amt, pick_no: picks.length });
-      if (row.pool == null) await H.sb("PATCH", `/rest/v1/hq_drafts?id=eq.${row.id}`, { pool: poolFrozen });
-      await H.notify(you, "plan", `${me} drafted ${it.title} (${H.money(amt)}). Your pick!`, null, "draft");
-      out.flash = `Drafted ${it.title} · ${H.money(amt)}`;
+      const allocations = { ...(row.allocations || {}) };
+      const key = String(it.id);
+      const otherSum = Object.keys(allocations).filter((k) => k !== key).reduce((t, k) => t + Number(allocations[k] || 0), 0);
+      const remaining = Math.max(0, it.cost - (it.saved || 0));
+      const maxForThis = Math.max(0, Math.min(remaining, poolFrozen - otherSum));
+      let amt = Math.round(Number(body.amount) || 0);
+      if (amt < 0) amt = 0;
+      amt = Math.min(amt, maxForThis);
+      if (amt > 0) allocations[key] = amt; else delete allocations[key];
+      await H.sb("PATCH", `/rest/v1/hq_drafts?id=eq.${row.id}`, { allocations, pool: poolFrozen, locked: { David: false, Anne: false } });
       break;
     }
-    case "draft_done": {
-      const row = await getDraftRow(); if (!row || row.status !== "open") break;
-      const poolFrozen = row.pool != null ? Number(row.pool) : Math.max(0, available);
-      await H.sb("PATCH", `/rest/v1/hq_drafts?id=eq.${row.id}`, { passed: { ...(row.passed || {}), [me]: true }, pool: poolFrozen });
-      break;
-    }
-    case "draft_lock": {
+    case "alloc_lock": {
       const row = await getDraftRow(); if (!row || row.status === "locked") break;
       const locked = { ...(row.locked || {}), [me]: true };
-      const picks = (await H.get(`/rest/v1/hq_draft_picks?select=*&draft_id=eq.${row.id}&order=pick_no.asc`)) || [];
-      const total = picks.reduce((t, p) => t + Number(p.amount), 0);
+      const allocations = row.allocations || {};
+      const total = Object.values(allocations).reduce((t, v) => t + Number(v || 0), 0);
+      const count = Object.keys(allocations).filter((k) => Number(allocations[k]) > 0).length;
       if (locked.David && locked.Anne) {
-        const byItem = {};
-        for (const p of picks) byItem[p.upgrade_id] = (byItem[p.upgrade_id] || 0) + Number(p.amount);
-        for (const id of Object.keys(byItem)) {
+        for (const id of Object.keys(allocations)) {
+          const amt = Number(allocations[id] || 0); if (amt <= 0) continue;
           const it = findItem(s, id);
-          await H.sb("PATCH", `/rest/v1/hq_upgrades?id=eq.${id}`, { saved: (it ? it.saved : 0) + byItem[id], planned: true });
-          await H.addHistory(id, `Got ${H.money(byItem[id])} in this week’s draft`);
+          await H.sb("PATCH", `/rest/v1/hq_upgrades?id=eq.${id}`, { saved: (it ? it.saved : 0) + amt, planned: true });
+          await H.addHistory(id, `Set aside ${H.money(amt)} this week`);
         }
         await H.sb("PATCH", `/rest/v1/hq_drafts?id=eq.${row.id}`, { locked, status: "locked" });
-        await H.notify(you, "plan", `This week’s plan is locked: ${H.money(total)} across ${picks.length} upgrades.`, null, "draft");
+        await H.notify(you, "plan", `This week’s plan is locked: ${H.money(total)} across ${count} upgrade${count === 1 ? "" : "s"}.`, null, "draft");
         out.flash = `Plan locked. ${H.money(total)} moved into savings jars.`;
       } else {
         await H.sb("PATCH", `/rest/v1/hq_drafts?id=eq.${row.id}`, { locked });
-        await H.notify(you, "plan", `${me} locked in this week’s plan. Your turn to lock it.`, null, "draft");
-        out.flash = `Locked. Waiting on ${you}.`;
+        await H.notify(you, "plan", `${me} locked in this week’s allocation. Your turn to lock it.`, null, "draft");
+        out.flash = `Locked in. Waiting on ${you}.`;
       }
       break;
     }

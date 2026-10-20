@@ -187,15 +187,16 @@ async function loadState(me) {
   const cardLog = (events || []).filter((e) => e.type === "cardlog").map((e) => ({ id: e.id, ...(e.payload || {}) }));
   const dropLog = (events || []).filter((e) => e.type === "drop").map((e) => ({ text: (e.payload || {}).text, amt: num((e.payload || {}).amt) }));
 
-  // draft
+  // Allocation session: a shared, free allocation of the weekly pool (no turns).
+  // `allocations` maps upgradeId -> dollars set aside this week; both must lock in.
   const draftRow = (drafts || [])[0] || null;
-  let dr = { open: true, pool: null, picks: [], first: hh.draft_first_next || "David", passed: { David: false, Anne: false }, locked: { David: false, Anne: false } };
+  let dr = { open: true, pool: null, locked: { David: false, Anne: false }, allocations: {} };
   if (draftRow) {
-    const picks = (await get(`/rest/v1/hq_draft_picks?select=*&draft_id=eq.${draftRow.id}&order=pick_no.asc`)) || [];
     dr = {
-      open: draftRow.status === "open", pool: num(draftRow.pool), first: draftRow.first_picker,
-      passed: draftRow.passed || { David: false, Anne: false }, locked: draftRow.locked || { David: false, Anne: false },
-      picks: picks.map((p) => ({ itemId: p.upgrade_id, who: p.who, amt: num(p.amount) })),
+      open: draftRow.status === "open",
+      pool: num(draftRow.pool),
+      locked: draftRow.locked || { David: false, Anne: false },
+      allocations: draftRow.allocations || {},
     };
   }
 

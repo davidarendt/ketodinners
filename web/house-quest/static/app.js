@@ -7,7 +7,7 @@
 (function () {
   const { h, render, Component: PComponent } = preact;
   const API = "/api";
-  const HQ_BUILD = "16"; // bump on each front-end change so the installed app can show its version
+  const HQ_BUILD = "17"; // bump on each front-end change so the installed app can show its version
 
   // ---- theme (resolve prefers-color-scheme to an explicit attribute) ----
   function applyTheme(t) { document.documentElement.dataset.theme = t; }
@@ -359,22 +359,15 @@
       let depDelta = (dayNames.indexOf(s.depositDay) - today.getDay() + 7) % 7; if (depDelta === 0) depDelta = 7;
       const nextDepFmt = new Date(today.getTime() + depDelta * 86400000).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
-      // weekly draft
+      // allocation session — free, shared, no turns
       const dr = s.dr;
       const drPool = dr.pool != null ? dr.pool : Math.max(0, available);
-      const multOf = (rank) => Math.max(0.15, 1 - 0.15 * (rank - 1));
-      const drPickedAmt = dr.picks.reduce((t, p) => t + p.amt, 0);
-      const drLeft = Math.max(0, drPool - drPickedAmt);
-      const firstP = dr.first, secondP = dr.first === "David" ? "Anne" : "David";
-      let turn = [firstP, secondP, secondP, firstP][dr.picks.length % 4];
-      if (dr.passed[turn]) turn = turn === "David" ? "Anne" : "David";
-      const drRaw = queue.map((x, i) => {
-        const rank = i + 1, mult = multOf(rank), pk = dr.picks.find((p) => p.itemId === x.id);
-        const amt = Math.round(Math.min(x.cost * mult, Math.max(0, x.cost - (x.saved || 0)), drLeft));
-        return { x, rank, mult, pk, amt };
-      });
-      const drFinished = dr.open && (drLeft <= 0 || (dr.passed.David && dr.passed.Anne) || !drRaw.some((o) => !o.pk && o.amt > 0));
-      const myTurn = dr.open && !drFinished && turn === me && !dr.passed[me];
+      const allocs = dr.allocations || {};
+      const allocSum = Object.keys(allocs).reduce((t, k) => t + Number(allocs[k] || 0), 0);
+      const drPickedAmt = allocSum;
+      const drLeft = Math.max(0, drPool - allocSum);
+      const STEP = 25;
+      const drLockedByMe = !!(dr.locked || {})[me];
 
       // board filters
       const fdefs = [["all", "All"], ["afford", "Can afford"], ["weekend", "Free weekend"], ["mine", "Mine"], ["partner", other + "’s"], ["both", "Both of us"], ["hire", "Hiring out"]];
@@ -513,21 +506,31 @@
 
         drOpen: dr.open, isDraft: s.tab === "draft", goDraft: () => this.setLocal({ tab: "draft", selCard: null }),
         drPoolFmt: this.money(drPool), drLeftFmt: this.money(drLeft), drUsedPct: drPool ? Math.round(drPickedAmt / drPool * 100) : 0, drPickedFmt: this.money(drPickedAmt),
-        drStatus: !dr.open ? "Plan locked. The money is in the savings jars." : (drFinished ? "Draft complete. Both of you lock it in." : (myTurn ? "Your pick." : (dr.passed[me] ? "You’re done. " + other + " is still picking." : "Waiting on " + other + " to pick."))),
-        drBanner: drFinished ? "Draft complete: " + this.money(drPickedAmt) + " across " + dr.picks.length + " upgrades. Lock it in." : (myTurn ? "Your pick. " + this.money(drLeft) + " left to allocate." : "Waiting on " + other + " to pick. " + this.money(drLeft) + " left."),
-        drCta: myTurn ? "Make your pick" : (drFinished ? "Review and lock" : "See the draft"),
-        drOptions: drRaw.map((o) => ({
-          title: o.x.title, rank: o.rank, score: o.x.score, costFmt: this.money(o.x.cost), multPct: Math.round(o.mult * 100), amtFmt: this.money(o.amt),
-          picked: !!o.pk, pickedLabel: o.pk ? o.pk.who + " drafted · " + this.money(o.pk.amt) : "",
-          canPick: myTurn && !o.pk && o.amt > 0, showCap: dr.open && !o.pk && o.amt > 0 && !myTurn,
-          pick: () => this.act("draft_pick", { upgradeId: o.x.id }),
-        })),
-        drCanPass: myTurn, drPass: () => this.act("draft_done"),
-        drShowPlan: drFinished || (!dr.open && dr.picks.length > 0),
-        drPicks: dr.picks.map((p) => { const it = s.items.find((y) => y.id === p.itemId); return { title: it ? it.title : "", who: p.who, amtFmt: this.money(p.amt) }; }),
+        drStatus: !dr.open ? "Locked in. The money is in the savings jars." : (drLockedByMe ? "You’ve locked in. Waiting on " + other + "." : "Allocate the money together, then both lock it in."),
+        drBanner: !dr.open ? "This week’s money is allocated and locked." : (drLeft > 0 ? this.money(drLeft) + " of " + this.money(drPool) + " left to put toward upgrades." : "All " + this.money(drPool) + " allocated — lock it in together."),
+        drCta: dr.open ? "Allocate the money" : "See the plan",
+        drOptions: queue.map((x) => {
+          const alloc = Number(allocs[String(x.id)] || 0);
+          const remaining = Math.max(0, x.cost - (x.saved || 0));
+          const pct = x.cost ? Math.min(100, Math.round(((x.saved || 0) + alloc) / x.cost * 100)) : 100;
+          const set = (amt) => this.act("alloc_set", { upgradeId: x.id, amount: Math.max(0, Math.round(amt)) });
+          return {
+            title: x.title, score: x.score, costFmt: this.money(x.cost), allocFmt: this.money(alloc),
+            sub: this.money(remaining) + " still needed · score " + x.score, pct, hasAlloc: alloc > 0,
+            canMinus: dr.open && alloc > 0, canPlus: dr.open && drLeft > 0 && alloc < remaining,
+            minus: () => set(Math.max(0, alloc - STEP)),
+            plus: () => set(Math.min(remaining, alloc + Math.min(STEP, drLeft))),
+            max: () => set(Math.min(remaining, alloc + drLeft)),
+          };
+        }),
+        drEmpty: queue.length === 0,
+        drShowPlan: true,
+        drPicks: queue.filter((x) => Number(allocs[String(x.id)] || 0) > 0).map((x) => ({ title: x.title, amtFmt: this.money(Number(allocs[String(x.id)])) })),
+        drNoPicks: !queue.some((x) => Number(allocs[String(x.id)] || 0) > 0),
         drLockD: dr.locked.David ? "locked in" : "not yet", drLockA: dr.locked.Anne ? "locked in" : "not yet",
-        drCanLock: drFinished && !dr.locked[me],
-        drLock: () => this.act("draft_lock"),
+        drCanLock: dr.open && !drLockedByMe,
+        drLockedByMe,
+        drLock: () => this.act("alloc_lock"),
 
         isDetail: !!d && s.tab === "detail", d: d || {}, dEditing: !!d && s.editing, dNotEditing: !!d && !s.editing,
         dStatus: d ? statusName[d.status] : "", dCostFmt: d ? this.money(d.cost) : "", dFund: d ? (d.fund === "lump" ? "All at once" : "Bit by bit") : "",
