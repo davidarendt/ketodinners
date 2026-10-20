@@ -7,7 +7,7 @@
 (function () {
   const { h, render, Component: PComponent } = preact;
   const API = "/api";
-  const HQ_BUILD = "15"; // bump on each front-end change so the installed app can show its version
+  const HQ_BUILD = "16"; // bump on each front-end change so the installed app can show its version
 
   // ---- theme (resolve prefers-color-scheme to an explicit attribute) ----
   function applyTheme(t) { document.documentElement.dataset.theme = t; }
@@ -116,6 +116,7 @@
       this.s = {
         me: this.me, tab: "board", toast: "", selCard: null, reveal: null, voteDraft: {},
         filter: "all", roomFilter: "Any room", detailId: null, prevTab: "board", editing: false, edit: {}, cDraft: "",
+        allStatus: "all", allRoom: "Any room", allSort: "Highest score",
         fTitle: "", fCost: "", fCat: "Kitchen", fNewCat: "", fImp: 5, fNote: "", fFund: "lump", fPieces: "10", fUnit: "", fEffort: 1, fWho: "Both", fSeason: "Any", fLink: "", fPhoto: "",
         finId: null, finMode: "lump", finActual: "", finAfter: "", recap: false,
         sBudget: "", adjAmt: "", adjNote: "", ctName: "", ctGlyph: "", ctDesc: "", ctValue: "", ctRarity: "Common",
@@ -437,6 +438,35 @@
       const opt = (list, cur, key, cls) => list.map((n) => ({ name: typeof n === "number" ? this.effortName(n) : n, cls: (n === cur ? cls + " on" : cls), pick: () => this.setLocal({ [key]: n }) }));
       const themeDark = document.documentElement.dataset.theme === "dark";
 
+      // ---- "All projects": every upgrade, any status, sortable + filterable ----
+      const allStatus = s.allStatus || "all";
+      const allRoom = s.allRoom || "Any room";
+      const allSort = s.allSort || "Highest score";
+      const statusDefs = [["all", "All"], ["pending", "Waiting"], ["approved", "On the board"], ["done", "Done"], ["shelved", "Shelf"]];
+      const statusOrder = { pending: 0, approved: 1, done: 2, shelved: 3 };
+      const sortDefs = ["Highest score", "Cheapest first", "Most expensive", "Name A–Z", "By room", "By status", "Newest"];
+      const sortCmp = {
+        "Highest score": (a, b) => scoreOf(b) - scoreOf(a) || a.cost - b.cost,
+        "Cheapest first": (a, b) => a.cost - b.cost,
+        "Most expensive": (a, b) => b.cost - a.cost,
+        "Name A–Z": (a, b) => a.title.localeCompare(b.title),
+        "By room": (a, b) => (a.cat || "").localeCompare(b.cat || "") || a.title.localeCompare(b.title),
+        "By status": (a, b) => (statusOrder[a.status] - statusOrder[b.status]) || (scoreOf(b) - scoreOf(a)),
+        "Newest": (a, b) => b.id - a.id,
+      };
+      const allFiltered = s.items.filter((x) => {
+        if (allStatus !== "all" && x.status !== allStatus) return false;
+        if (allRoom !== "Any room" && x.cat !== allRoom) return false;
+        return true;
+      }).slice().sort(sortCmp[allSort] || sortCmp["Highest score"]);
+      const allItems = allFiltered.map((x) => ({
+        ...x, costFmt: this.money(x.cost), statusLabel: statusName[x.status], score: scoreOf(x),
+        hasScore: x.imp.David != null && x.imp.Anne != null,
+        fundLabel: x.fund === "lump" ? "All at once" : "Bit by bit", whoLabel: this.whoName(x.who),
+        d: x.imp.David == null ? "—" : x.imp.David, a: x.imp.Anne == null ? "—" : x.imp.Anne,
+        open: () => this.openDetail(x.id),
+      }));
+
       return {
         me, other, month: new Date().toLocaleString("en-US", { month: "long" }), season: this.season.toLowerCase(),
         signOut: () => this.signOut(),
@@ -599,6 +629,11 @@
         goAdd: () => this.setLocal({ tab: "add", selCard: null }), goEvent: () => this.setLocal({ tab: "event", selCard: null }),
         goSettings: () => this.setLocal({ tab: "settings", selCard: null }), goTrophies: () => this.setLocal({ tab: "trophies", selCard: null }),
         goHelp: () => this.setLocal({ tab: "help", selCard: null }),
+        isAll: s.tab === "all", goAll: () => this.setLocal({ tab: "all", selCard: null }), itemCount: s.items.length,
+        allItems, allCount: allItems.length, allTotal: s.items.length, allEmpty: allItems.length === 0,
+        allStatusOpts: statusDefs.map(([k, n]) => ({ name: n, cls: k === allStatus ? "cbtn on" : "cbtn", pick: () => this.setLocal({ allStatus: k }) })),
+        allRoom, setAllRoom: (e) => this.setLocal({ allRoom: e.target.value }),
+        allSortVal: allSort, allSortOpts: sortDefs, setAllSort: (e) => this.setLocal({ allSort: e.target.value }),
 
         fTitle: s.fTitle, fCost: s.fCost, fNewCat: s.fNewCat, fNote: s.fNote, fPieces: s.fPieces, fUnit: s.fUnit, fLink: s.fLink,
         fPhoto: s.fPhoto, fHasPhoto: !!s.fPhoto, fPhotoLabel: s.fPhoto ? "Change photo" : "Add a before photo",

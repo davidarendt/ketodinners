@@ -402,8 +402,9 @@ html,body{margin:0;min-height:100%;overscroll-behavior-y:none}
 
       <div class="row between" style="padding: 6px 2px 0">
         <span class="disp" style="font-size: 20px; font-weight: 800">Up next</span>
-        <span class="mini">It's {{season}} · in-season jobs get +3</span>
+        <button class="btn ghost sm" onClick="{{goAll}}">All projects ›</button>
       </div>
+      <span class="mini" style="padding: 0 2px; margin-top: -8px">It's {{season}} · in-season jobs get +3</span>
       <div class="filters" role="group" aria-label="Filter upgrades">
         <sc-for list="{{filters}}" as="f" hint-placeholder-count="6">
           <button class="{{f.cls}}" onClick="{{f.pick}}">{{f.name}}</button>
@@ -1324,6 +1325,47 @@ html,body{margin:0;min-height:100%;overscroll-behavior-y:none}
         </div>
         <button class="btn pri full" onClick="{{closeRecap}}">Bring on next week</button>
       </div>
+    </div>
+  </sc-if>
+
+  <!-- ALL PROJECTS -->
+  <sc-if value="{{isAll}}" hint-placeholder-val="{{ false }}">
+    <div class="scroll">
+      <div class="row between">
+        <button class="btn ghost sm" onClick="{{goBoard}}">‹ Back</button>
+      </div>
+      <div class="h2">All projects</div>
+      <div class="filters" role="group" aria-label="Filter by status">
+        <sc-for list="{{allStatusOpts}}" as="f" hint-placeholder-count="5">
+          <button class="{{f.cls}}" onClick="{{f.pick}}">{{f.name}}</button>
+        </sc-for>
+      </div>
+      <div class="row" style="margin-top: -4px; gap: 8px">
+        <select class="sel" style="flex: 1" aria-label="Filter by room" value="{{allRoom}}" onChange="{{setAllRoom}}" data-opts="roomOpts"></select>
+        <select class="sel" style="flex: 1" aria-label="Sort by" value="{{allSortVal}}" onChange="{{setAllSort}}" data-opts="allSortOpts"></select>
+      </div>
+      <span class="mini" style="padding: 0 2px">Showing {{allCount}} of {{allTotal}}</span>
+
+      <sc-for list="{{allItems}}" as="it" hint-placeholder-count="4">
+        <div class="card" style="gap: 8px">
+          <div class="row between" style="align-items: flex-start">
+            <div class="col">
+              <span class="mini">{{it.cat}} · {{it.statusLabel}}</span>
+              <button class="tlink" onClick="{{it.open}}">{{it.title}}</button>
+            </div>
+            <span class="disp" style="font-size: 18px; font-weight: 800">{{it.costFmt}}</span>
+          </div>
+          <div class="row wrap">
+            <span class="chip">{{it.whoLabel}}</span>
+            <span class="chip">{{it.fundLabel}}</span>
+            <sc-if value="{{it.hasScore}}" hint-placeholder-val="{{ true }}"><span class="chip">Score {{it.score}}</span></sc-if>
+          </div>
+          <div class="imp"><span>David <b>{{it.d}}</b></span><span>Anne <b>{{it.a}}</b></span></div>
+        </div>
+      </sc-for>
+      <sc-if value="{{allEmpty}}" hint-placeholder-val="{{ false }}">
+        <div class="card"><span class="mini">No projects match these filters.</span></div>
+      </sc-if>
     </div>
   </sc-if>
 
