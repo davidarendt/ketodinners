@@ -16,7 +16,7 @@
     # Pragmatic CSP: these are no-build apps with inline <style>/<script> (the
     # inlined Preact runtime, SW registration), so script/style allow 'unsafe-inline'.
     # Everything else is locked to self + the known font/Supabase hosts.
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co; manifest-src 'self'; worker-src 'self'; base-uri 'self'; form-action 'self' https://www.walmart.com; frame-ancestors 'self'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co; manifest-src 'self'; worker-src 'self'; base-uri 'self'; form-action 'self' https://www.walmart.com; frame-ancestors 'self'"
 
 # --- Long-cache immutable static assets (icons/images only; NOT js/css/html,
 #     which the service workers keep fresh via network-first). ---
