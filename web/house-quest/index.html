@@ -809,6 +809,8 @@ html,body{margin:0;min-height:100%;overscroll-behavior-y:none}
     <div class="scroll">
       <div class="h2">Settings</div>
 
+      <button class="btn pri full" onClick="{{goHelp}}">How to play — the rules</button>
+
       <div class="card dark">
         <span class="lbl">Balance</span>
         <span class="disp" style="font-size: 40px; font-weight: 800; line-height: 1">{{balanceFmt}}</span>
@@ -1322,6 +1324,89 @@ html,body{margin:0;min-height:100%;overscroll-behavior-y:none}
         </div>
         <button class="btn pri full" onClick="{{closeRecap}}">Bring on next week</button>
       </div>
+    </div>
+  </sc-if>
+
+  <!-- HELP / HOW TO PLAY -->
+  <sc-if value="{{isHelp}}" hint-placeholder-val="{{ false }}">
+    <div class="scroll">
+      <div class="row between">
+        <button class="btn ghost sm" onClick="{{goSettings}}">‹ Back</button>
+      </div>
+      <div class="h2">How to play</div>
+      <span class="mini" style="margin-top:-8px;padding:0 2px">Everything you need to run the house, from pitch to payoff.</span>
+
+      <div class="card">
+        <span class="lbl">The weekly loop</span>
+        <span class="mini" style="line-height:1.6">
+          <b>1. Pitch</b> an upgrade — its cost, room, how it's paid for (all at once, or bit by bit), how much work it is, who's doing it, the best season, and your own 1–10 importance rating.<br><br>
+          <b>2. Vote.</b> Your partner rates it 1–10 — hidden until you've both voted — or passes to shelve it. Once you both rate it, it lands on the Board, ranked by combined score.<br><br>
+          <b>3. Deposit.</b> Your weekly budget lands in the balance on your deposit day.<br><br>
+          <b>4. Draft.</b> Take turns putting that money toward upgrades, then both lock the plan — the money moves into each upgrade's savings jar.<br><br>
+          <b>5. Do the work.</b> Finish an upgrade (or one piece of a bit-by-bit project) and enter what it actually cost.<br><br>
+          <b>6. Rewards.</b> Finishing earns XP and a power card. Keep the house leveling up.
+        </span>
+      </div>
+
+      <div class="card">
+        <span class="lbl">Scoring &amp; ranking</span>
+        <span class="mini" style="line-height:1.6">
+          Score = David's rating + Anne's rating (each 1–10, so up to 20), plus <b>+5</b> for each Champion card, <b>+your rating again</b> for a Double Down, and <b>+3</b> when it's the job's best season.<br><br>
+          <b>Up Next</b> is ordered: Fast-Tracked items first, then highest score, then cheapest.
+        </span>
+      </div>
+
+      <div class="card">
+        <span class="lbl">Money &amp; your balance</span>
+        <span class="mini" style="line-height:1.6">
+          Your <b>balance</b> is the sum of the ledger. <b>Free to spend</b> = balance minus everything set aside in savings jars.<br><br>
+          <b>Set aside $100</b> moves up to $100 of free money into an upgrade's jar. Finishing <b>under</b> your estimate refunds the difference as a bonus; going <b>over</b> spends extra and can push you into the red until the next deposit.<br><br>
+          You can also adjust the balance by hand in Settings for real-life stuff — a gift card, a return, cash you pulled out.
+        </span>
+      </div>
+
+      <div class="card">
+        <span class="lbl">The weekly draft</span>
+        <span class="mini" style="line-height:1.6">
+          The draft opens with each deposit. You pick in <b>snake order</b> (A, B, B, A…), and the first pick alternates every week.<br><br>
+          The higher an upgrade ranks, the bigger the share of its cost you can put toward it this week: <b>#1 up to 100%</b>, each spot down 15% less, bottoming out at 15%. You can still draft low-ranked items — they just get less. Both of you tap <b>Lock it in</b> to confirm.
+        </span>
+      </div>
+
+      <div class="card">
+        <span class="lbl">XP &amp; levels</span>
+        <span class="mini" style="line-height:1.6">
+          Finishing jobs earns XP — more for bigger projects, with a bonus for coming in under budget. Every <b>100 XP</b> is a new house level (Fixer-Upper → Dream House). Each level-up draws a card for <b>both</b> of you.
+        </span>
+      </div>
+
+      <div class="card">
+        <span class="lbl">Cards</span>
+        <span class="mini" style="line-height:1.6">
+          You draw a card when you finish an upgrade; both of you draw on level-ups and holidays. Odds: 60% common, 30% rare, 10% legendary.<br><br>
+          <b>Power cards:</b> Champion (+5 score), Lucky Penny (+$25), Peek (see a hidden vote), Coupon (10% refund), Double Down (your vote counts twice), Fast Track (jump to the top), Second Chance (revive a shelved pitch), Block (cancel your partner's last card), Swap Meet (trade a random card), Jackpot (+$150), Golden Hammer (50% refund), Executive Order (approve your own pitch).<br><br>
+          <b>Treat cards</b> are real-life rewards — redeem them together, or bank them for cash toward the house. Play and manage all of these on the <b>Cards</b> tab.
+        </span>
+      </div>
+
+      <div class="card">
+        <span class="lbl">Events</span>
+        <span class="mini" style="line-height:1.6">
+          <b>Surprise drops:</b> random $20–$50 cash with a ridiculous reason, a few times a month.<br>
+          <b>Holidays:</b> bonus money plus a card each on the big days.<br>
+          <b>Weekly wildcard:</b> one dice roll a week that can help or hurt.<br><br>
+          Find them on the <b>Events</b> tab; switch any of them on or off in Settings.
+        </span>
+      </div>
+
+      <div class="card">
+        <span class="lbl">Achievements &amp; trophies</span>
+        <span class="mini" style="line-height:1.6">
+          There are <b>30 achievements</b> to unlock, a floor plan that fills in room by room as you finish jobs, and a trophy wall for your before/after photos — all on the <b>Trophies</b> tab.
+        </span>
+      </div>
+
+      <button class="btn pri full" onClick="{{goSettings}}">Got it</button>
     </div>
   </sc-if>
 

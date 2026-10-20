@@ -2,7 +2,7 @@
 // Network-first for same-origin GETs (deploys show up), cache fallback offline.
 // API + function calls are never cached. Cache name is namespaced so the keto
 // and Almanac apps' SW cleanup won't touch it (and vice-versa).
-const CACHE = 'housequest-v14';
+const CACHE = 'housequest-v15';
 const SHELL = [
   '/house-quest/',
   '/house-quest/static/app.js',
