@@ -4,14 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo actually is
 
-One Netlify site (`appsbydavid`, formerly `ketodinners`; `https://appsbydavid.netlify.app`) hosting a small **app launcher at `/` (`web/index.html`)** plus **three independent apps** that share the origin, the Supabase project, and the `netlify/functions/` dir:
+One Netlify site (`appsbydavid`, formerly `ketodinners`; `https://appsbydavid.netlify.app`) hosting a small **app launcher at `/` (`web/index.html`)** plus **four independent apps** that share the origin (and, where they need one, the Supabase project and the `netlify/functions/` dir):
 
 - **Dinner Planner** (`/planner/`) — the keto meal-plan SPA, reskinned from "keto dinners". It lived at `/` until the launcher took the root; its assets still live under `web/static/` and `web/planner/index.html` references them with **origin-absolute** paths (so the move needed no asset changes). Backend/data/Supabase names are unchanged — only the skin.
 - **The Almanac** (`/weight/`) — a weight-tracker PWA (details below).
 - **House Quest** (`/house-quest/`) — a two-player house-upgrade game PWA (details below).
+- **Teddy's Day** (`/teddys-day/`) — a kid's daily activity-picker PWA (picture tiles, a must-do row, numbered slots, grown-up settings behind a math gate). Delivered as a finished self-contained bundle (`web/teddys-day/`: `index.html` + `manifest.json` + `sw.js` + icons) — **no backend, no Supabase, no functions, all relative paths**. Its SW (`teddys-day-vN`) is scoped to `/teddys-day/` and, like the others, prunes **only** its own-prefixed caches on activate (the shared-CacheStorage rule). To update, just edit the bundle and bump its SW cache name.
 - **Legacy Python tools** — `meal_planner.py` (CLI) and `meal_planner_web.py` (local Flask-style server). Predate the Netlify deploy, not part of the live site. Only touch if the user explicitly says so.
 
-The three apps are **deliberately self-contained** (own front-end dir, own functions, own tables) so any can be lifted into its own project later. All front-ends are **vanilla JS with no build step** — no bundler/minifier/transpile, no fingerprinted filenames. There is a root `package.json`, but only for the `web-push` dependency used by the push-sender functions; everything else uses Node built-ins (`fs`, `path`, `fetch`, `crypto`).
+The apps are **deliberately self-contained** (own front-end dir, own functions where needed, own tables) so any can be lifted into its own project later. All front-ends are **vanilla JS with no build step** — no bundler/minifier/transpile, no fingerprinted filenames. There is a root `package.json`, but only for the `web-push` dependency used by the push-sender functions; everything else uses Node built-ins (`fs`, `path`, `fetch`, `crypto`).
 
 ### Second app: "The Almanac" weight tracker (`/weight/`)
 

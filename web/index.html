@@ -8,7 +8,7 @@
 <meta name="description" content="A little home for David's apps — pick one to open.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="apps by david">
-<meta property="og:description" content="Three little apps, one roof — Dinner Planner, The Almanac, and House Quest.">
+<meta property="og:description" content="Four little apps, one roof — Dinner Planner, The Almanac, House Quest, and Teddy's Day.">
 <meta property="og:image" content="/icons/icon-512.png">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -36,8 +36,9 @@
   .brand{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
   h1{font-size:clamp(28px,7vw,40px);font-weight:800;line-height:1.05;margin:8px 0 6px;letter-spacing:-.02em}
   header p{margin:0;color:var(--muted);font-size:15px}
-  .grid{display:grid;gap:16px;width:100%;max-width:980px;grid-template-columns:repeat(3,1fr)}
-  @media (max-width:720px){ .grid{grid-template-columns:1fr;max-width:420px} }
+  .grid{display:grid;gap:16px;width:100%;max-width:1180px;grid-template-columns:repeat(4,1fr)}
+  @media (max-width:1000px){ .grid{grid-template-columns:repeat(2,1fr);max-width:720px} }
+  @media (max-width:560px){ .grid{grid-template-columns:1fr;max-width:420px} }
   .app{
     display:flex;gap:16px;align-items:center;text-decoration:none;color:inherit;background:var(--card);
     border:1px solid var(--border);border-radius:22px;padding:18px;box-shadow:var(--shadow);
@@ -59,7 +60,7 @@
   <header>
     <div class="brand">apps&nbsp;by&nbsp;david</div>
     <h1>Pick an app</h1>
-    <p>Three little apps, one roof.</p>
+    <p>Four little apps, one roof.</p>
   </header>
 
   <main class="grid">
@@ -86,6 +87,15 @@
       <div class="meta">
         <span class="name">House Quest</span>
         <span class="tag">Plan, budget and build the house — together. A two-player upgrade game.</span>
+        <span class="go">Open &rarr;</span>
+      </div>
+    </a>
+
+    <a class="app" href="/teddys-day/" style="--accent:#7fd3ff">
+      <img class="icon" src="/teddys-day/icon-192.png" alt="Teddy's Day logo" width="64" height="64">
+      <div class="meta">
+        <span class="name">Teddy's Day</span>
+        <span class="tag">Teddy picks the day's activities — big picture tiles, a must-do, and a grown-up gate.</span>
         <span class="go">Open &rarr;</span>
       </div>
     </a>
