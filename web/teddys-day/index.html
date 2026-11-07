@@ -93,6 +93,9 @@ h1{margin:0;text-align:center;font-size:clamp(30px,9vw,42px);line-height:1;font-
 .steps li.done strong{text-decoration:line-through;text-decoration-thickness:3px}
 .steps li.done .check{background:var(--grass)}
 .steps li.done .check svg{opacity:1}
+.steps.ordermode li{cursor:grab}
+.grab{width:46px;height:46px;flex:none;display:flex;align-items:center;justify-content:center;color:#8a8fa3}
+.grab svg{width:26px;height:26px}
 .cheer{margin:0;text-align:center;font-size:clamp(28px,8vw,38px);font-weight:800;color:var(--ink)}
 .tap{margin:-6px 0 0;text-align:center;font-size:20px;font-weight:600}
 .card{background:var(--white);border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:0 6px 0 rgba(31,42,90,.2)}
@@ -171,10 +174,12 @@ canvas{position:fixed;inset:0;pointer-events:none;z-index:6}
 
 <div class="app plan" id="plan" hidden>
   <h1>Teddy's Day</h1>
-  <p class="tap" id="tap">Tap each one when you finish it! Hold and drag to move it.</p>
+  <p class="tap" id="orderTip" hidden>Grown-up: drag the pictures into the order Teddy should do them, then start the day.</p>
+  <p class="tap" id="tap">Tap each one when you finish it!</p>
   <ol class="steps" id="steps"></ol>
   <p class="cheer" id="cheer" hidden>All done! Great day, Teddy!</p>
-  <div class="bar"><button class="btn light" id="edit">Change</button><button class="btn" id="restart">New day</button></div>
+  <div class="bar" id="orderBar" hidden><button class="btn light" id="orderBack">Back</button><button class="btn" id="startDay">Start Teddy's day!</button></div>
+  <div class="bar" id="checkBar"><button class="btn light" id="edit">Change</button><button class="btn" id="restart">New day</button></div>
 </div>
 
 <div class="app" id="parent" hidden>
@@ -189,6 +194,12 @@ canvas{position:fixed;inset:0;pointer-events:none;z-index:6}
     <div class="card">
       <p>How many things do you have time for today?</p>
       <div class="stepper"><button type="button" class="step" id="minus" aria-label="Fewer">&minus;</button><span class="count" id="cnt">4</span><button type="button" class="step" id="plus" aria-label="More">+</button></div>
+    </div>
+    <div class="card" id="syncCard">
+      <p>Sync across devices</p>
+      <input id="syncCode" type="text" maxlength="40" placeholder="a secret code" autocomplete="off" aria-label="Sync code" style="font-size:22px">
+      <p class="ptext" id="syncStatus" style="margin:0"></p>
+      <div style="display:flex;gap:10px"><button type="button" class="btn light" id="syncOff">Turn off</button><button type="button" class="btn" id="syncOn">Connect</button></div>
     </div>
     <div class="mode" role="group" aria-label="What tapping a picture does"><button type="button" id="modeMust" aria-pressed="true">Must do</button><button type="button" id="modeBlock" aria-pressed="false">Not today</button></div>
     <p class="ptext" id="modeText">Tap anything Teddy has to do. It goes in his day and he can't remove it.</p>
@@ -279,6 +290,11 @@ let locks={};
 try{ const v=JSON.parse(localStorage.getItem('teddy-locks')||'{}'); if(v&&typeof v==='object') for(const k in v){ if(valid(k)&&(v[k]==='last'||(+v[k]>=1&&+v[k]<=10))) locks[k]=v[k]==='last'?'last':+v[k] } }catch(e){}
 let choice={};
 try{ const v=JSON.parse(localStorage.getItem('teddy-choice')||'{}'); if(v&&typeof v==='object') for(const k in v){ if(valid(k)&&valid(v[k])) choice[k]=v[k] } }catch(e){}
+// --- cross-device sync state (see sync block near the end) ---
+const SYNC_KEYS=['teddy-must','teddy-day','teddy-done','teddy-count','teddy-order','teddy-blocked','teddy-locks','teddy-choice','teddy-custom'];
+let syncCode=''; try{ syncCode=(localStorage.getItem('teddy-sync-code')||'').trim() }catch(e){}
+let syncedAt=''; try{ syncedAt=localStorage.getItem('teddy-sync-at')||'' }catch(e){}
+let syncReady=false, pushing=false, applyingRemote=false, pushTimer=null;
 const ACT=id=>ACTS.find(a=>a.id===id)||{};
 const disp=id=>choice[id]||id;
 const lockOf=id=>must.includes(id)&&locks[id]!=null?locks[id]:null;
@@ -302,11 +318,14 @@ function save(){
   order=planList(); done=done.filter(id=>order.includes(id));
   try{ localStorage.setItem('teddy-locks',JSON.stringify(locks)); localStorage.setItem('teddy-choice',JSON.stringify(choice)) }catch(e){}
   try{ localStorage.setItem('teddy-day',JSON.stringify(day)); localStorage.setItem('teddy-must',JSON.stringify(must)); localStorage.setItem('teddy-done',JSON.stringify(done)); localStorage.setItem('teddy-count',String(total)); localStorage.setItem('teddy-order',JSON.stringify(order)); localStorage.setItem('teddy-blocked',JSON.stringify({date:TODAY,ids:blocked})) }catch(e){}
+  if(syncReady) schedulePush();
 }
 save();
 const CHECK='<svg viewBox="0 0 24 24"><path d="M4 12.5 L10 18 L20 6" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const nameOf=id=>ACTS.find(a=>a.id===id).name;
 const LOCK='<svg class="lk" viewBox="0 0 24 24" role="img" aria-label="Locked"><rect x="5" y="10" width="14" height="11" rx="2" fill="#1f2a5a"/><path d="M8 10 V7 a4 4 0 0 1 8 0 V10" stroke="#1f2a5a" stroke-width="2.5" fill="none"/></svg>';
+const DRAG='<svg viewBox="0 0 24 24" role="img" aria-label="Drag"><path d="M4 8 h16 M4 12 h16 M4 16 h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>';
+let planMode='check'; // 'order' = grown-up arranging; 'check' = Teddy ticking off
 
 function buildTiles(){
   ['park','ology','town','home','custom'].forEach(g=>$(g+'Grid').innerHTML='');
@@ -374,22 +393,31 @@ function show(view){
   scrollTo(0,0);
 }
 function buildSteps(anim){
-  const ol=$('steps'); ol.innerHTML=''; const items=planList();
+  const ol=$('steps'); ol.innerHTML=''; ol.classList.toggle('ordermode',planMode==='order'); const items=planList();
   items.forEach((id,i)=>{
     const word= i===0?'First': i===items.length-1?'Last': (i%2?'Next':'Then'), m=must.includes(id);
     const li=document.createElement('li'); li.dataset.id=id; if(m) li.classList.add('is-must');
     const lk=lockOf(id); if(lk!=null) li.classList.add('locked');
     if(anim&&!reduce){li.classList.add('pop');li.style.animationDelay=(i*.12)+'s'}
-    li.innerHTML=ART[disp(id)]+'<div class="txt"><small>'+word+(m?' <em>★ Must do</em>':'')+(lk!=null?LOCK:'')+'</small><strong>'+esc(nameOf(disp(id)))+'</strong></div><span class="check">'+CHECK+'</span>';
-    li.tabIndex=0; li.setAttribute('role','button');
-    const isDone=done.includes(id); li.classList.toggle('done',isDone); li.setAttribute('aria-pressed',isDone);
-    li.onclick=()=>markDone(id,li);
-    li.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); markDone(id,li) } };
+    const tail = planMode==='order' ? '<span class="grab">'+DRAG+'</span>' : '<span class="check">'+CHECK+'</span>';
+    li.innerHTML=ART[disp(id)]+'<div class="txt"><small>'+word+(m?' <em>★ Must do</em>':'')+(lk!=null?LOCK:'')+'</small><strong>'+esc(nameOf(disp(id)))+'</strong></div>'+tail;
+    if(planMode==='check'){
+      li.tabIndex=0; li.setAttribute('role','button');
+      const isDone=done.includes(id); li.classList.toggle('done',isDone); li.setAttribute('aria-pressed',isDone);
+      li.onclick=()=>markDone(id,li);
+      li.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); markDone(id,li) } };
+    }
     ol.appendChild(li);
   });
-  updateCheer();
+  if(planMode==='check') updateCheer();
 }
-function showPlan(){ buildSteps(true); show('plan'); if(!reduce) confetti() }
+function updatePlanChrome(){
+  const ord=planMode==='order';
+  $('orderBar').hidden=!ord; $('checkBar').hidden=ord; $('orderTip').hidden=!ord;
+  if(ord){ $('tap').hidden=true; $('cheer').hidden=true } else { $('tap').hidden=false; updateCheer() }
+}
+function enterPlan(mode){ planMode=mode; buildSteps(true); show('plan'); updatePlanChrome(); if(mode==='check'&&!reduce) confetti() }
+function startDay(){ planMode='check'; buildSteps(false); updatePlanChrome(); if(!reduce) confetti() }
 
 (function(){
   const ol=$('steps'); let timer=null, drag=null, startY=0, suppress=false;
@@ -400,6 +428,7 @@ function showPlan(){ buildSteps(true); show('plan'); if(!reduce) confetti() }
     order=[...ol.children].map(li=>li.dataset.id); drag=null; save(); buildSteps(false);
   };
   ol.addEventListener('pointerdown',e=>{
+    if(planMode!=='order') return;
     const li=e.target.closest('li'); if(!li||li.classList.contains('locked')||e.button>0) return;
     startY=e.clientY; clearTimeout(timer);
     timer=setTimeout(()=>{ timer=null; drag=li; suppress=true; li.classList.add('dragging');
@@ -421,10 +450,12 @@ function showPlan(){ buildSteps(true); show('plan'); if(!reduce) confetti() }
   ol.addEventListener('click',e=>{ if(suppress){ e.stopPropagation(); e.preventDefault(); suppress=false } },true);
 })();
 function showPick(){ render(); show('pick') }
-$('done').onclick=showPlan;
+$('done').onclick=()=>openGate('order');
 $('clear').onclick=()=>{ day=[]; choice={}; save(); render() };
-$('edit').onclick=showPick;
-$('restart').onclick=()=>{ day=[]; done=[]; choice={}; save(); showPick() };
+$('startDay').onclick=startDay;
+$('orderBack').onclick=showPick;
+$('edit').onclick=()=>openGate('edit');
+$('restart').onclick=()=>openGate('new');
 
 let answer=0, draft=[], draftTotal=4, draftBlocked=[], draftLocks={}, mode='must';
 function setMode(m){
@@ -434,19 +465,26 @@ function setMode(m){
 }
 $('modeMust').onclick=()=>setMode('must');
 $('modeBlock').onclick=()=>setMode('block');
-$('openParent').onclick=()=>{
+let gateIntent='settings'; // 'settings' | 'order' | 'edit' | 'new'
+function openGate(intent){
+  gateIntent=intent;
   const a=13+Math.floor(Math.random()*45), b=13+Math.floor(Math.random()*45); answer=a+b;
   $('q').textContent=a+' + '+b; $('ans').value=''; $('err').hidden=true;
   $('gate').hidden=false; $('settings').hidden=true; show('parent'); $('ans').focus();
-};
-$('gateBack').onclick=showPick;
+}
+$('openParent').onclick=()=>openGate('settings');
+$('gateBack').onclick=()=>{ if(gateIntent==='edit'||gateIntent==='new') show('plan'); else showPick(); };
 $('ans').oninput=()=>{ $('err').hidden=true };
 $('gate').onsubmit=e=>{
   e.preventDefault();
   const v=$('ans').value.trim();
   if(v===''){ $('err').textContent='Type the answer first.'; $('err').hidden=false; return }
   if(+v!==answer){ $('err').textContent='Not quite. Try again.'; $('err').hidden=false; return }
-  draft=[...must]; draftTotal=total; draftBlocked=[...blocked]; draftLocks={...locks}; buildStepper(); setMode('must'); buildCustomList(); $('gate').hidden=true; $('settings').hidden=false;
+  if(gateIntent==='order'){ enterPlan('order'); return }
+  if(gateIntent==='edit'){ showPick(); return }
+  if(gateIntent==='new'){ day=[]; done=[]; choice={}; save(); showPick(); return }
+  // settings
+  draft=[...must]; draftTotal=total; draftBlocked=[...blocked]; draftLocks={...locks}; buildStepper(); setMode('must'); buildCustomList(); $('syncCode').value=syncCode; setSyncStatus(); $('gate').hidden=true; $('settings').hidden=false;
 };
 function buildCustomList(){
   const l=$('clist'); l.innerHTML='';
@@ -525,6 +563,74 @@ function confetti(){
     ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=.1;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);cx.restore()});
     if(++t<180) requestAnimationFrame(f); else cx.clearRect(0,0,cv.width,cv.height)})();
 }
+
+/* ---------------- cross-device sync ----------------
+   The sync code is the shared key: same code on two devices => same day.
+   localStorage stays the instant-save layer; the server is the shared copy,
+   pulled when the app opens/regains focus and pushed (debounced) on every save.
+   Last write wins — fine for a one-kid app used one device at a time. */
+function snapshot(){ const o={}; SYNC_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null) o[k]=v }); return o }
+function reloadFromStorage(){
+  try{ const v=JSON.parse(localStorage.getItem('teddy-custom')||'[]'); custom=Array.isArray(v)?v.filter(c=>c&&typeof c.id==='string'&&typeof c.name==='string'):[] }catch(e){ custom=[] }
+  rebuild();
+  total=4; try{ const t=parseInt(localStorage.getItem('teddy-count'),10); if(t>=1&&t<=10) total=t }catch(e){}
+  must=load('teddy-must').slice(0,total);
+  day=load('teddy-day').filter(id=>!must.includes(id)).slice(0,picks());
+  done=load('teddy-done');
+  blocked=[]; try{ const v=JSON.parse(localStorage.getItem('teddy-blocked')||'null'); if(v&&v.date===TODAY&&Array.isArray(v.ids)) blocked=v.ids.filter(valid) }catch(e){}
+  day=day.filter(id=>!blocked.includes(id));
+  order=load('teddy-order');
+  locks={}; try{ const v=JSON.parse(localStorage.getItem('teddy-locks')||'{}'); if(v&&typeof v==='object') for(const k in v){ if(valid(k)&&(v[k]==='last'||(+v[k]>=1&&+v[k]<=10))) locks[k]=v[k]==='last'?'last':+v[k] } }catch(e){}
+  choice={}; try{ const v=JSON.parse(localStorage.getItem('teddy-choice')||'{}'); if(v&&typeof v==='object') for(const k in v){ if(valid(k)&&valid(v[k])) choice[k]=v[k] } }catch(e){}
+  day=day.filter(id=>!must.some(m=>(ACT(m).choices||[]).includes(id)));
+  buildTiles();
+  if(!$('plan').hidden && planMode==='check') buildSteps(false);
+  render();
+}
+function applyRemote(state){ applyingRemote=true; try{ SYNC_KEYS.forEach(k=>{ if(state[k]!=null) localStorage.setItem(k,state[k]) }); reloadFromStorage() } finally{ applyingRemote=false } }
+function setSyncStatus(){
+  const el=$('syncStatus'); if(!el) return;
+  el.innerHTML = syncCode
+    ? 'Synced as <b>'+esc(syncCode)+'</b>. Use the same code on another device to share Teddy’s day.'
+    : 'Not syncing — picks stay on this device.';
+}
+async function pullNow(){
+  if(!syncCode) return;
+  try{
+    const r=await fetch('/api/teddy-sync?code='+encodeURIComponent(syncCode));
+    if(!r.ok) return;
+    const j=await r.json();
+    if(j && j.state && j.updated_at){
+      if(j.updated_at!==syncedAt){ applyRemote(j.state); syncedAt=j.updated_at; try{ localStorage.setItem('teddy-sync-at',syncedAt) }catch(e){} }
+    } else {
+      pushNow(); // no row on the server yet — seed it from this device
+    }
+  }catch(e){}
+}
+async function pushNow(){
+  if(!syncCode || pushing) return;
+  pushing=true;
+  try{
+    const r=await fetch('/api/teddy-sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:syncCode,state:snapshot()})});
+    if(r.ok){ const j=await r.json(); if(j&&j.updated_at){ syncedAt=j.updated_at; try{ localStorage.setItem('teddy-sync-at',syncedAt) }catch(e){} } }
+  }catch(e){} finally{ pushing=false }
+}
+function schedulePush(){ if(!syncCode||applyingRemote) return; clearTimeout(pushTimer); pushTimer=setTimeout(pushNow,700) }
+$('syncOn').onclick=()=>{
+  const c=($('syncCode').value||'').trim().toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,40);
+  if(c.length<3){ $('syncStatus').textContent='Pick a code with at least 3 letters or numbers (a-z, 0-9, -).'; return }
+  syncCode=c; $('syncCode').value=c;
+  try{ localStorage.setItem('teddy-sync-code',c); localStorage.setItem('teddy-sync-at','') }catch(e){}
+  syncedAt=''; setSyncStatus(); pullNow();
+};
+$('syncOff').onclick=()=>{
+  syncCode=''; syncedAt=''; try{ localStorage.removeItem('teddy-sync-code'); localStorage.removeItem('teddy-sync-at') }catch(e){}
+  $('syncCode').value=''; setSyncStatus();
+};
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) pullNow() });
+addEventListener('focus',()=>pullNow());
+setSyncStatus();
+if(syncCode){ pullNow().finally(()=>{ syncReady=true }) } else { syncReady=true }
 
 if('serviceWorker' in navigator){ addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}) }) }
 </script>

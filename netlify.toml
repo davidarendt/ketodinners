@@ -152,6 +152,12 @@
 [functions."hq-push-sender"]
   schedule = "*/15 * * * *"
 
+# --- Teddy's Day (kid activity picker at /teddys-day/) ---
+[[redirects]]
+  from = "/api/teddy-sync"
+  to = "/.netlify/functions/teddy-sync"
+  status = 200
+
 [[redirects]]
   from = "/recipes/*"
   to = "/.netlify/functions/recipe-page"
