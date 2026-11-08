@@ -1,4 +1,4 @@
-const CACHE='teddys-day-v3';
+const CACHE='teddys-day-v4';
 const FILES=['./','index.html','manifest.json','icon-180.png','icon-192.png','icon-512.png'];
 self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting())) });
 // Only prune our own caches — CacheStorage is shared across the origin with the

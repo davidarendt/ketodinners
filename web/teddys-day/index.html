@@ -96,6 +96,8 @@ h1{margin:0;text-align:center;font-size:clamp(30px,9vw,42px);line-height:1;font-
 .steps.ordermode li{cursor:grab}
 .grab{width:46px;height:46px;flex:none;display:flex;align-items:center;justify-content:center;color:#8a8fa3}
 .grab svg{width:26px;height:26px}
+.adminbar{justify-content:center;gap:18px}
+.adminbar .grown{font-size:14px;opacity:.75}
 .cheer{margin:0;text-align:center;font-size:clamp(28px,8vw,38px);font-weight:800;color:var(--ink)}
 .tap{margin:-6px 0 0;text-align:center;font-size:20px;font-weight:600}
 .card{background:var(--white);border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:0 6px 0 rgba(31,42,90,.2)}
@@ -179,7 +181,7 @@ canvas{position:fixed;inset:0;pointer-events:none;z-index:6}
   <ol class="steps" id="steps"></ol>
   <p class="cheer" id="cheer" hidden>All done! Great day, Teddy!</p>
   <div class="bar" id="orderBar" hidden><button class="btn light" id="orderBack">Back</button><button class="btn" id="startDay">Start Teddy's day!</button></div>
-  <div class="bar" id="checkBar"><button class="btn light" id="edit">Change</button><button class="btn" id="restart">New day</button></div>
+  <div class="bar adminbar" id="checkBar"><button class="grown" id="edit">Change</button><button class="grown" id="restart">New day</button></div>
 </div>
 
 <div class="app" id="parent" hidden>
@@ -326,6 +328,10 @@ const nameOf=id=>ACTS.find(a=>a.id===id).name;
 const LOCK='<svg class="lk" viewBox="0 0 24 24" role="img" aria-label="Locked"><rect x="5" y="10" width="14" height="11" rx="2" fill="#1f2a5a"/><path d="M8 10 V7 a4 4 0 0 1 8 0 V10" stroke="#1f2a5a" stroke-width="2.5" fill="none"/></svg>';
 const DRAG='<svg viewBox="0 0 24 24" role="img" aria-label="Drag"><path d="M4 8 h16 M4 12 h16 M4 16 h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>';
 let planMode='check'; // 'order' = grown-up arranging; 'check' = Teddy ticking off
+// Which screen the day is on, persisted so closing the app keeps us on the
+// checklist until a grown-up starts a new day. 'pick' (default) | 'check'.
+let phase='pick'; try{ if(localStorage.getItem('teddy-phase')==='check') phase='check' }catch(e){}
+function setPhase(p){ phase=p; try{ localStorage.setItem('teddy-phase',p) }catch(e){} }
 
 function buildTiles(){
   ['park','ology','town','home','custom'].forEach(g=>$(g+'Grid').innerHTML='');
@@ -417,7 +423,7 @@ function updatePlanChrome(){
   if(ord){ $('tap').hidden=true; $('cheer').hidden=true } else { $('tap').hidden=false; updateCheer() }
 }
 function enterPlan(mode){ planMode=mode; buildSteps(true); show('plan'); updatePlanChrome(); if(mode==='check'&&!reduce) confetti() }
-function startDay(){ planMode='check'; buildSteps(false); updatePlanChrome(); if(!reduce) confetti() }
+function startDay(){ planMode='check'; setPhase('check'); buildSteps(false); updatePlanChrome(); if(!reduce) confetti() }
 
 (function(){
   const ol=$('steps'); let timer=null, drag=null, startY=0, suppress=false;
@@ -481,8 +487,8 @@ $('gate').onsubmit=e=>{
   if(v===''){ $('err').textContent='Type the answer first.'; $('err').hidden=false; return }
   if(+v!==answer){ $('err').textContent='Not quite. Try again.'; $('err').hidden=false; return }
   if(gateIntent==='order'){ enterPlan('order'); return }
-  if(gateIntent==='edit'){ showPick(); return }
-  if(gateIntent==='new'){ day=[]; done=[]; choice={}; save(); showPick(); return }
+  if(gateIntent==='edit'){ setPhase('pick'); showPick(); return }
+  if(gateIntent==='new'){ day=[]; done=[]; choice={}; save(); setPhase('pick'); showPick(); return }
   // settings
   draft=[...must]; draftTotal=total; draftBlocked=[...blocked]; draftLocks={...locks}; buildStepper(); setMode('must'); buildCustomList(); $('syncCode').value=syncCode; setSyncStatus(); $('gate').hidden=true; $('settings').hidden=false;
 };
@@ -552,6 +558,9 @@ $('saveMust').onclick=()=>{ total=draftTotal; blocked=ACTS.map(a=>a.id).filter(i
   day=day.filter(id=>!must.includes(id)&&!blocked.includes(id)&&!opts.includes(id)).slice(0,picks()); save(); showPick() };
 
 render();
+// If a day is already underway, reopen straight to Teddy's checklist (survives
+// closing the app) instead of dropping back to the pick screen.
+if(phase==='check'){ if(planList().length>0){ planMode='check'; buildSteps(false); show('plan'); updatePlanChrome(); } else { setPhase('pick'); } }
 
 const cv=$('fx'), cx=cv.getContext('2d');
 function confetti(){
